@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Download, Trash2, Share2, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePhotos } from '@/context/PhotoContext';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -13,7 +12,6 @@ const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { photos, deletePhoto } = usePhotos();
-  const { toast } = useToast();
   const [photo, setPhoto] = useState(photos.find(p => p.id === id) || null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -25,14 +23,12 @@ const PhotoDetail = () => {
 
     // If photo not found, navigate back
     if (!foundPhoto) {
-      toast({
-        title: "Photo not found",
+      toast("Photo not found", {
         description: "The photo you're looking for doesn't exist.",
-        variant: "destructive"
       });
       navigate('/');
     }
-  }, [id, photos, navigate, toast]);
+  }, [id, photos, navigate]);
 
   if (!photo) {
     return (
@@ -65,8 +61,7 @@ const PhotoDetail = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast({
-      title: "Download started",
+    toast("Download started", {
       description: "Your photo is being downloaded."
     });
   };
@@ -80,8 +75,7 @@ const PhotoDetail = () => {
       }).catch(error => console.log('Error sharing', error));
     } else {
       navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied",
+      toast("Link copied", {
         description: "Photo link copied to clipboard."
       });
     }
@@ -89,8 +83,7 @@ const PhotoDetail = () => {
 
   const toggleLike = () => {
     setIsLiked(!isLiked);
-    toast({
-      title: isLiked ? "Removed from favorites" : "Added to favorites",
+    toast(isLiked ? "Removed from favorites" : "Added to favorites", {
       description: isLiked 
         ? "Photo has been removed from your favorites" 
         : "Photo has been added to your favorites"

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, Loader2 } from 'lucide-react';
 import { usePhotos } from '@/context/PhotoContext';
 import { cn } from '@/lib/utils';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 const UploadButton = () => {
   const { uploadPhoto } = usePhotos();
