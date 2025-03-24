@@ -15,12 +15,13 @@ const FavoriteButton = () => {
     return null;
   }
   
-  // Get current photo ID from the URL if we're on a photo page
+  // Get current path
   const currentPath = location.pathname;
   const isHomePage = currentPath === '/';
+  const isFavoritesPage = currentPath === '/favorites';
   
   // Only show the global favorite button on main page and not on favorites route
-  if (!isHomePage || currentPath === '/favorites') {
+  if (!isHomePage || isFavoritesPage) {
     return null;
   }
 
