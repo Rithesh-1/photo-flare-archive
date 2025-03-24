@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,10 +12,9 @@ import { cn } from '@/lib/utils';
 const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { photos, deletePhoto } = usePhotos();
+  const { photos, deletePhoto, toggleFavorite, isFavorite } = usePhotos();
   const [photo, setPhoto] = useState(photos.find(p => p.id === id) || null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
     // Find the photo from the context
@@ -81,13 +81,8 @@ const PhotoDetail = () => {
     }
   };
 
-  const toggleLike = () => {
-    setIsLiked(!isLiked);
-    toast(isLiked ? "Removed from favorites" : "Added to favorites", {
-      description: isLiked 
-        ? "Photo has been removed from your favorites" 
-        : "Photo has been added to your favorites"
-    });
+  const handleToggleFavorite = () => {
+    toggleFavorite(photo.id);
   };
 
   return (
@@ -106,12 +101,12 @@ const PhotoDetail = () => {
               <ArrowLeft size={20} />
             </Button>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={toggleLike}>
+              <Button variant="ghost" size="icon" onClick={handleToggleFavorite}>
                 <Heart 
                   size={20} 
                   className={cn(
                     "transition-colors duration-300",
-                    isLiked ? "fill-red-500 text-red-500" : "text-photo-600"
+                    isFavorite(photo.id) ? "fill-red-500 text-red-500" : "text-photo-600"
                   )} 
                 />
               </Button>

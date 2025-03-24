@@ -14,10 +14,13 @@ interface PhotoContextType {
   photos: Photo[];
   loading: boolean;
   selectedPhoto: Photo | null;
+  favorites: string[];
   uploadPhoto: (file: File) => Promise<void>;
   selectPhoto: (photo: Photo) => void;
   clearSelectedPhoto: () => void;
   deletePhoto: (id: string) => void;
+  toggleFavorite: (id: string) => void;
+  isFavorite: (id: string) => boolean;
 }
 
 const PhotoContext = createContext<PhotoContextType | undefined>(undefined);
@@ -99,6 +102,7 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
   const [photos, setPhotos] = useState<Photo[]>(INITIAL_PHOTOS);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
     // Simulate loading delay
@@ -151,7 +155,29 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
     if (selectedPhoto && selectedPhoto.id === id) {
       clearSelectedPhoto();
     }
+    // Also remove from favorites if it exists there
+    if (favorites.includes(id)) {
+      setFavorites(prev => prev.filter(favId => favId !== id));
+    }
     toast.success('Photo deleted successfully');
+  };
+
+  const toggleFavorite = (id: string) => {
+    if (favorites.includes(id)) {
+      setFavorites(prev => prev.filter(favId => favId !== id));
+      toast("Removed from favorites", {
+        description: "Photo has been removed from your favorites"
+      });
+    } else {
+      setFavorites(prev => [...prev, id]);
+      toast("Added to favorites", {
+        description: "Photo has been added to your favorites"
+      });
+    }
+  };
+
+  const isFavorite = (id: string) => {
+    return favorites.includes(id);
   };
 
   return (
@@ -159,10 +185,13 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
       photos,
       loading,
       selectedPhoto,
+      favorites,
       uploadPhoto,
       selectPhoto,
       clearSelectedPhoto,
-      deletePhoto
+      deletePhoto,
+      toggleFavorite,
+      isFavorite
     }}>
       {children}
     </PhotoContext.Provider>
