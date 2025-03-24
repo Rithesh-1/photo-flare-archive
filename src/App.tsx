@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import PhotoDetail from "./pages/PhotoDetail";
 import Albums from "./pages/Albums";
 import Favorites from "./pages/Favorites";
+import ImageClassifier from "./pages/ImageClassifier";
 import FavoriteButton from "./components/FavoriteButton";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/photo/:id" element={<PhotoDetail />} />
             <Route path="/albums" element={<Albums />} />
             <Route path="/favorites" element={<Favorites />} />
+            <Route path="/classifier" element={<ImageClassifier />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <FavoriteButton />
