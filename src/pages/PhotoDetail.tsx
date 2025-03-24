@@ -1,165 +1,171 @@
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Download, Trash2, Share2, Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import Layout from '@/components/Layout';
 import { usePhotos } from '@/context/PhotoContext';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Heart, Tag, Sparkles, Image } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { photos, deletePhoto, toggleFavorite, isFavorite } = usePhotos();
-  const [photo, setPhoto] = useState(photos.find(p => p.id === id) || null);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    // Find the photo from the context
-    const foundPhoto = photos.find(p => p.id === id);
-    setPhoto(foundPhoto || null);
-
-    // If photo not found, navigate back
-    if (!foundPhoto) {
-      toast("Photo not found", {
-        description: "The photo you're looking for doesn't exist.",
-      });
-      navigate('/');
-    }
-  }, [id, photos, navigate]);
-
+  const { photos, toggleFavorite, isFavorite } = usePhotos();
+  
+  const photo = photos.find(p => p.id === id);
+  
   if (!photo) {
     return (
-      <div className="fixed inset-0 bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Photo not found</h2>
-          <p className="text-photo-500 mb-4">The photo you're looking for doesn't exist or has been removed.</p>
-          <Button onClick={() => navigate('/')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Gallery
-          </Button>
+      <Layout>
+        <div className="py-12 text-center">
+          <h2 className="text-2xl font-medium mb-4">Photo not found</h2>
+          <Button onClick={() => navigate('/')}>Back to Home</Button>
         </div>
-      </div>
+      </Layout>
     );
   }
-
-  const handleGoBack = () => {
-    navigate('/');
-  };
-
-  const handleDelete = () => {
-    deletePhoto(photo.id);
-    navigate('/');
-  };
-
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = photo.url;
-    link.download = `${photo.title}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast("Download started", {
-      description: "Your photo is being downloaded."
-    });
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: photo.title,
-        text: photo.description,
-        url: window.location.href,
-      }).catch(error => console.log('Error sharing', error));
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast("Link copied", {
-        description: "Photo link copied to clipboard."
-      });
-    }
-  };
-
-  const handleToggleFavorite = () => {
-    toggleFavorite(photo.id);
-  };
-
+  
+  const isPhotoFavorite = isFavorite(photo.id);
+  
   return (
-    <div className="fixed inset-0 bg-background overflow-hidden z-50">
-      <AnimatePresence>
-        <motion.div
-          key={photo.id}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="h-full flex flex-col"
-        >
-          {/* Header */}
-          <div className="glass-effect py-3 px-4 flex items-center justify-between z-10">
-            <Button variant="ghost" size="icon" onClick={handleGoBack}>
-              <ArrowLeft size={20} />
-            </Button>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={handleToggleFavorite}>
-                <Heart 
-                  size={20} 
-                  className={cn(
-                    "transition-colors duration-300",
-                    isFavorite(photo.id) ? "fill-red-500 text-red-500" : "text-photo-600"
-                  )} 
-                />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleShare}>
-                <Share2 size={20} className="text-photo-600" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleDownload}>
-                <Download size={20} className="text-photo-600" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleDelete}>
-                <Trash2 size={20} className="text-photo-600" />
-              </Button>
+    <Layout>
+      <div className="py-6">
+        <div className="flex items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild 
+            className="mr-2"
+          >
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back to Photos
+            </Link>
+          </Button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <div className="rounded-xl overflow-hidden mb-4">
+              <img 
+                src={photo.url}
+                alt={photo.title}
+                className="w-full object-cover"
+              />
             </div>
           </div>
           
-          {/* Photo container */}
-          <div className="flex-1 overflow-hidden bg-photo-900/5">
-            <div className="h-full flex items-center justify-center p-4">
-              <div className="relative max-w-5xl max-h-full">
-                {!isLoaded && (
-                  <div className="absolute inset-0 bg-photo-200 animate-pulse rounded-lg"></div>
-                )}
-                <motion.img
-                  src={photo.url}
-                  alt={photo.title}
+          <div>
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-semibold">{photo.title}</h1>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleFavorite(photo.id)}
                   className={cn(
-                    "max-w-full max-h-full object-contain rounded-lg shadow-2xl",
-                    isLoaded ? "opacity-100" : "opacity-0"
+                    "transition-all",
+                    isPhotoFavorite ? "text-red-500" : "text-gray-400"
                   )}
-                  onLoad={() => setIsLoaded(true)}
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: isLoaded ? 1 : 0 }}
-                  transition={{ duration: 0.3 }}
-                />
+                >
+                  <Heart className={cn(
+                    "h-6 w-6 transition-all",
+                    isPhotoFavorite && "fill-red-500"
+                  )} />
+                </Button>
+              </div>
+              
+              {photo.description && (
+                <p className="text-gray-600 mb-6">{photo.description}</p>
+              )}
+              
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-sm font-medium text-gray-500 mb-3">DETAILS</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Created</span>
+                    <span className="font-medium">
+                      {photo.createdAt.toLocaleDateString()}
+                    </span>
+                  </div>
+                  
+                  {/* Display classification data if available */}
+                  {photo.classification && (
+                    <>
+                      <div className="border-t my-4 pt-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Sparkles size={16} className="text-primary" />
+                          <h3 className="text-sm font-medium text-gray-500">CLASSIFICATION</h3>
+                        </div>
+                        
+                        {/* Image Quality */}
+                        <div className="mb-4">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-gray-600">Quality</span>
+                            <span className="font-medium">
+                              {photo.classification.quality.score}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-2">
+                            <motion.div 
+                              className={cn(
+                                "h-2 rounded-full",
+                                photo.classification.quality.score > 70 
+                                  ? "bg-green-500" 
+                                  : photo.classification.quality.score > 40 
+                                    ? "bg-yellow-500" 
+                                    : "bg-red-500"
+                              )}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${photo.classification.quality.score}%` }}
+                              transition={{ duration: 0.5 }}
+                            />
+                          </div>
+                          {photo.classification.quality.issue && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {photo.classification.quality.issue}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Faces Detected */}
+                        <div className="flex justify-between mb-3">
+                          <span className="text-gray-600">Faces Detected</span>
+                          <span className="font-medium">
+                            {photo.classification.faces}
+                          </span>
+                        </div>
+                        
+                        {/* Tags */}
+                        <div className="mt-4">
+                          <div className="flex items-center gap-1 mb-2">
+                            <Tag size={14} className="text-gray-500" />
+                            <span className="text-gray-600 text-sm">Tags</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {photo.classification.tags.map((tag, index) => (
+                              <Badge 
+                                key={index} 
+                                variant="secondary" 
+                                className="bg-gray-100 text-gray-700"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-          
-          {/* Footer with info */}
-          <div className="glass-effect py-4 px-6">
-            <div className="flex flex-col">
-              <h1 className="text-xl font-medium text-photo-800">{photo.title}</h1>
-              {photo.description && (
-                <p className="text-sm text-photo-600 mt-1">{photo.description}</p>
-              )}
-              <p className="text-xs text-photo-500 mt-2">
-                {format(new Date(photo.createdAt), 'MMMM d, yyyy')}
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    </div>
+        </div>
+      </div>
+    </Layout>
   );
 };
 

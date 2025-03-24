@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from 'sonner';
+import { analyzeImage } from '../utils/imageClassifier';
 
 interface Photo {
   id: string;
@@ -8,6 +9,11 @@ interface Photo {
   title: string;
   description?: string;
   createdAt: Date;
+  classification?: {
+    tags: string[];
+    faces: number;
+    quality: { score: number; issue?: string };
+  };
 }
 
 interface PhotoContextType {
@@ -120,22 +126,38 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
       // Create a temporary URL for the uploaded file
       const url = URL.createObjectURL(file);
       
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Show toast notification that classification is in progress
+      toast.info('Analyzing image...', {
+        duration: 3000,
+      });
+      
+      // Analyze the image using our classifier utility
+      const classification = await analyzeImage(file);
       
       const newPhoto: Photo = {
         id: Date.now().toString(),
         url,
         title: file.name.split('.')[0],
         description: `Uploaded on ${new Date().toLocaleDateString()}`,
-        createdAt: new Date()
+        createdAt: new Date(),
+        classification
       };
       
       setPhotos(prev => [newPhoto, ...prev]);
-      toast.success('Photo uploaded successfully!');
+      
+      // Show notification with classification summary
+      const { faces, quality } = classification;
+      const tagSummary = classification.tags.slice(0, 3).join(', ');
+      
+      toast.success('Photo uploaded and analyzed!', {
+        description: 
+          `${faces ? `Detected ${faces} face${faces > 1 ? 's' : ''}. ` : ''}` +
+          `Quality: ${quality.score}%. Tags: ${tagSummary}`,
+        duration: 5000,
+      });
       
     } catch (error) {
-      toast.error('Failed to upload photo');
+      toast.error('Failed to upload or analyze photo');
       console.error(error);
     } finally {
       setLoading(false);
