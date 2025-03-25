@@ -11,15 +11,12 @@ import PhotoDetail from "./pages/PhotoDetail";
 import Albums from "./pages/Albums";
 import Favorites from "./pages/Favorites";
 import ImageClassifier from "./pages/ImageClassifier";
-import FavoriteButton from "./components/FavoriteButton";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <PhotoProvider>
         <BrowserRouter>
           <Routes>
@@ -30,8 +27,9 @@ const App = () => (
             <Route path="/classifier" element={<ImageClassifier />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <FavoriteButton />
         </BrowserRouter>
+        <Toaster />
+        <Sonner richColors closeButton position="top-right" duration={3000} />
       </PhotoProvider>
     </TooltipProvider>
   </QueryClientProvider>

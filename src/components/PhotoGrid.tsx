@@ -4,6 +4,8 @@ import PhotoCard from './PhotoCard';
 import { usePhotos } from '@/context/PhotoContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { UploadCloud } from 'lucide-react';
 
 const PhotoGrid = () => {
   const { photos, loading } = usePhotos();
@@ -12,7 +14,7 @@ const PhotoGrid = () => {
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 12 }).map((_, index) => (
+        {Array.from({ length: 8 }).map((_, index) => (
           <div key={index} className="rounded-xl overflow-hidden">
             <Skeleton className="w-full h-48" />
           </div>
@@ -21,7 +23,7 @@ const PhotoGrid = () => {
     );
   }
 
-  // If no photos, display empty state
+  // If no photos, display empty state with upload button
   if (photos.length === 0) {
     return (
       <motion.div
@@ -46,14 +48,21 @@ const PhotoGrid = () => {
           </svg>
         </div>
         <h3 className="text-xl font-semibold text-photo-800 mb-2">No photos yet</h3>
-        <p className="text-photo-500 max-w-md">
+        <p className="text-photo-500 max-w-md mb-6">
           Upload your first photo to get started. Your photos will appear here.
         </p>
+        <Button className="flex items-center gap-2" variant="outline">
+          <UploadCloud className="w-4 h-4" />
+          <label htmlFor="file-upload" className="cursor-pointer">
+            Upload a photo
+          </label>
+          <input id="file-upload" type="file" className="hidden" />
+        </Button>
       </motion.div>
     );
   }
 
-  // Display the photo grid
+  // Display the photo grid with optimizations
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {photos.map((photo) => (

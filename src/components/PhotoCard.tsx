@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,32 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
   const [isError, setIsError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  
+  // Pre-load the image to prevent layout shifts
+  useEffect(() => {
+    // Reset state when URL changes
+    setIsLoaded(false);
+    setIsError(false);
+    
+    const img = new Image();
+    img.src = `${url}${url.includes('?') ? '&' : '?'}t=${retryCount}`;
+    
+    img.onload = () => {
+      setIsLoaded(true);
+      setIsError(false);
+    };
+    
+    img.onerror = () => {
+      setIsError(true);
+      setIsLoaded(false);
+    };
+    
+    // Cleanup function
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [url, retryCount]);
 
   const displayTags = classification?.tags?.slice(0, 3) || [];
   const hasClassification = classification && displayTags.length > 0;

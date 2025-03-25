@@ -28,17 +28,64 @@ const UploadButton = () => {
     fileInputRef.current?.click();
   };
 
+  const createOptimizedPreview = async (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      // Create a preview that's fast to display while maintaining the original
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Create a canvas to resize the image for preview
+          const canvas = document.createElement('canvas');
+          // Calculate scaled dimensions
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Draw the resized image
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Get the data URL (lower quality for preview)
+            const previewUrl = canvas.toDataURL('image/jpeg', 0.85);
+            resolve(previewUrl);
+          } else {
+            // Fallback to original if canvas fails
+            resolve(URL.createObjectURL(file));
+          }
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const processUpload = async (file: File) => {
     try {
       setIsUploading(true);
       
-      // Create a low-res preview for the UI display
-      const previewUrl = URL.createObjectURL(file);
+      // Create a preview version for fast display
+      const previewUrl = await createOptimizedPreview(file);
       
-      // Pass both the original file and preview URL
+      // Upload the original file with the preview
       await uploadPhoto(file, previewUrl);
       
-      toast.success('Photo uploaded successfully');
     } catch (error) {
       console.error('Upload error:', error);
       const errorMsg = error instanceof Error ? error.message : 'Failed to upload photo';
@@ -61,9 +108,9 @@ const UploadButton = () => {
       return false;
     }
     
-    // Check file size - increased to 25MB to allow for higher quality images
-    if (file.size > 25 * 1024 * 1024) {
-      setErrorMessage('File is too large. Maximum size is 25MB');
+    // Increased size limit to 50MB to allow for higher quality images
+    if (file.size > 50 * 1024 * 1024) {
+      setErrorMessage('File is too large. Maximum size is 50MB');
       setErrorDialogOpen(true);
       return false;
     }

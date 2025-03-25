@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from 'sonner';
 import { analyzeImage } from '../utils/imageClassifier';
@@ -123,61 +122,63 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
   const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
-    // Simulate loading delay
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1200);
+    }, 600);
 
     return () => clearTimeout(timer);
   }, []);
 
   const uploadPhoto = async (file: File, previewUrl?: string) => {
     try {
-      setLoading(true);
+      const tempId = `temp-${Date.now()}`;
+      const tempPhoto: Photo = {
+        id: tempId,
+        url: previewUrl || URL.createObjectURL(file),
+        originalUrl: URL.createObjectURL(file),
+        title: file.name.split('.')[0],
+        description: `Uploading...`,
+        createdAt: new Date(),
+      };
       
-      // If no preview URL was provided, create one
-      const displayUrl = previewUrl || URL.createObjectURL(file);
+      setPhotos(prev => [tempPhoto, ...prev]);
       
-      // For the original URL, we store the raw file as a blob URL
-      // In a real-world app, this would be uploaded to a storage service
-      const originalUrl = URL.createObjectURL(file);
-      
-      // Show toast notification that classification is in progress
-      toast.info('Analyzing image...', {
-        duration: 3000,
+      toast.info('Processing image...', {
+        duration: 2000,
       });
       
-      // Analyze the image using our classifier utility
       const classification = await analyzeImage(file);
       
-      const newPhoto: Photo = {
+      const finalPhoto: Photo = {
         id: Date.now().toString(),
-        url: displayUrl,
-        originalUrl: originalUrl,
+        url: tempPhoto.url,
+        originalUrl: tempPhoto.originalUrl,
         title: file.name.split('.')[0],
         description: `Uploaded on ${new Date().toLocaleDateString()}`,
         createdAt: new Date(),
         classification
       };
       
-      setPhotos(prev => [newPhoto, ...prev]);
+      setPhotos(prev => 
+        prev.map(p => p.id === tempId ? finalPhoto : p)
+      );
       
-      // Show notification with classification summary
       const { faces, quality } = classification;
       const tagSummary = classification.tags.slice(0, 3).join(', ');
       
-      toast.success('Photo uploaded and analyzed!', {
+      toast.success('Image processed!', {
         description: 
-          `${faces ? `Detected ${faces} face${faces > 1 ? 's' : ''}. ` : ''}` +
+          `${faces ? `${faces} face${faces > 1 ? 's' : ''}. ` : ''}` +
           `Quality: ${quality.score}%. Tags: ${tagSummary}`,
-        duration: 5000,
+        duration: 3000,
       });
       
     } catch (error) {
-      toast.error('Failed to upload or analyze photo');
-      console.error(error);
-    } finally {
-      setLoading(false);
+      console.error('Upload error:', error);
+      toast.error('Upload failed', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+        duration: 3000
+      });
     }
   };
 
@@ -190,11 +191,9 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deletePhoto = (id: string) => {
-    // Get the photo to clean up URLs before removing
     const photoToDelete = photos.find(photo => photo.id === id);
     
     if (photoToDelete) {
-      // Clean up any blob URLs to prevent memory leaks
       try {
         if (photoToDelete.url && photoToDelete.url.startsWith('blob:')) {
           URL.revokeObjectURL(photoToDelete.url);
@@ -208,26 +207,32 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
     }
     
     setPhotos(prev => prev.filter(photo => photo.id !== id));
+    
     if (selectedPhoto && selectedPhoto.id === id) {
       clearSelectedPhoto();
     }
-    // Also remove from favorites if it exists there
+    
     if (favorites.includes(id)) {
       setFavorites(prev => prev.filter(favId => favId !== id));
     }
-    toast.success('Photo deleted successfully');
+    
+    toast.success('Photo deleted', {
+      duration: 2000
+    });
   };
 
   const toggleFavorite = (id: string) => {
     if (favorites.includes(id)) {
       setFavorites(prev => prev.filter(favId => favId !== id));
       toast("Removed from favorites", {
-        description: "Photo has been removed from your favorites"
+        description: "Photo removed from favorites",
+        duration: 2000
       });
     } else {
       setFavorites(prev => [...prev, id]);
       toast("Added to favorites", {
-        description: "Photo has been added to your favorites"
+        description: "Photo added to favorites",
+        duration: 2000
       });
     }
   };
@@ -239,11 +244,12 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
   const downloadPhoto = (id: string) => {
     const photo = photos.find(p => p.id === id);
     if (!photo) {
-      toast.error('Photo not found');
+      toast.error('Photo not found', {
+        duration: 2000
+      });
       return;
     }
 
-    // Create an invisible link to trigger the download
     const link = document.createElement('a');
     link.href = photo.originalUrl;
     link.download = `${photo.title || 'photo'}.jpg`; 
@@ -251,7 +257,9 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
     link.click();
     document.body.removeChild(link);
 
-    toast.success('Photo download started');
+    toast.success('Download started', {
+      duration: 2000
+    });
   };
 
   return (
