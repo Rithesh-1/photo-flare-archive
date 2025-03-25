@@ -6,9 +6,33 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { UploadCloud } from 'lucide-react';
+import { toast } from 'sonner';
 
 const PhotoGrid = () => {
-  const { photos, loading } = usePhotos();
+  const { photos, loading, uploadPhoto } = usePhotos();
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file (JPEG, PNG, etc.)');
+      return;
+    }
+    
+    try {
+      await uploadPhoto(file);
+      // Reset input value to allow uploading the same file again
+      event.target.value = '';
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Failed to upload image');
+      event.target.value = '';
+    }
+  };
 
   // Display loading skeletons
   if (loading) {
@@ -56,7 +80,13 @@ const PhotoGrid = () => {
           <label htmlFor="file-upload" className="cursor-pointer">
             Upload a photo
           </label>
-          <input id="file-upload" type="file" className="hidden" />
+          <input 
+            id="file-upload" 
+            type="file" 
+            accept="image/*"
+            className="hidden" 
+            onChange={handleFileUpload}
+          />
         </Button>
       </motion.div>
     );

@@ -124,18 +124,29 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 600);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, []);
 
+  const createImageUrl = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const objectUrl = URL.createObjectURL(file);
+      resolve(objectUrl);
+    });
+  };
+
   const uploadPhoto = async (file: File, previewUrl?: string) => {
     try {
       const tempId = `temp-${Date.now()}`;
+      
+      const originalImageUrl = await createImageUrl(file);
+      const displayUrl = previewUrl || originalImageUrl;
+      
       const tempPhoto: Photo = {
         id: tempId,
-        url: previewUrl || URL.createObjectURL(file),
-        originalUrl: URL.createObjectURL(file),
+        url: displayUrl,
+        originalUrl: originalImageUrl,
         title: file.name.split('.')[0],
         description: `Uploading...`,
         createdAt: new Date(),
@@ -144,40 +155,61 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
       setPhotos(prev => [tempPhoto, ...prev]);
       
       toast.info('Processing image...', {
-        duration: 2000,
+        duration: 1500,
       });
       
-      const classification = await analyzeImage(file);
-      
-      const finalPhoto: Photo = {
-        id: Date.now().toString(),
-        url: tempPhoto.url,
-        originalUrl: tempPhoto.originalUrl,
-        title: file.name.split('.')[0],
-        description: `Uploaded on ${new Date().toLocaleDateString()}`,
-        createdAt: new Date(),
-        classification
-      };
-      
-      setPhotos(prev => 
-        prev.map(p => p.id === tempId ? finalPhoto : p)
-      );
-      
-      const { faces, quality } = classification;
-      const tagSummary = classification.tags.slice(0, 3).join(', ');
-      
-      toast.success('Image processed!', {
-        description: 
-          `${faces ? `${faces} face${faces > 1 ? 's' : ''}. ` : ''}` +
-          `Quality: ${quality.score}%. Tags: ${tagSummary}`,
-        duration: 3000,
-      });
+      try {
+        const classification = await analyzeImage(file);
+        
+        const finalPhoto: Photo = {
+          id: Date.now().toString(),
+          url: displayUrl,
+          originalUrl: originalImageUrl,
+          title: file.name.split('.')[0],
+          description: `Uploaded on ${new Date().toLocaleDateString()}`,
+          createdAt: new Date(),
+          classification
+        };
+        
+        setPhotos(prev => 
+          prev.map(p => p.id === tempId ? finalPhoto : p)
+        );
+        
+        const { faces, quality } = classification;
+        const tagSummary = classification.tags.slice(0, 3).join(', ');
+        
+        toast.success('Image processed!', {
+          description: 
+            `${faces ? `${faces} face${faces > 1 ? 's' : ''}. ` : ''}` +
+            `Quality: ${quality.score}%. Tags: ${tagSummary}`,
+          duration: 2000,
+        });
+      } catch (error) {
+        console.error('Analysis error:', error);
+        
+        const finalPhoto: Photo = {
+          id: Date.now().toString(),
+          url: displayUrl,
+          originalUrl: originalImageUrl,
+          title: file.name.split('.')[0],
+          description: `Uploaded on ${new Date().toLocaleDateString()}`,
+          createdAt: new Date(),
+        };
+        
+        setPhotos(prev => 
+          prev.map(p => p.id === tempId ? finalPhoto : p)
+        );
+        
+        toast.warning('Image uploaded but analysis failed', {
+          duration: 2000,
+        });
+      }
       
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Upload failed', {
         description: error instanceof Error ? error.message : 'Unknown error',
-        duration: 3000
+        duration: 2500
       });
     }
   };
@@ -217,7 +249,7 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
     }
     
     toast.success('Photo deleted', {
-      duration: 2000
+      duration: 1500
     });
   };
 
@@ -245,7 +277,7 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
     const photo = photos.find(p => p.id === id);
     if (!photo) {
       toast.error('Photo not found', {
-        duration: 2000
+        duration: 1500
       });
       return;
     }
@@ -258,7 +290,7 @@ export const PhotoProvider = ({ children }: { children: ReactNode }) => {
     document.body.removeChild(link);
 
     toast.success('Download started', {
-      duration: 2000
+      duration: 1500
     });
   };
 

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,7 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
   const [isError, setIsError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const imgRef = useRef<HTMLImageElement>(null);
   
   // Pre-load the image to prevent layout shifts
   useEffect(() => {
@@ -31,8 +32,13 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
     setIsLoaded(false);
     setIsError(false);
     
+    // Use a fresh URL to avoid browser caching issues
+    const imageUrl = url.includes('?') 
+      ? `${url}&cache=${Date.now()}-${retryCount}`
+      : `${url}?cache=${Date.now()}-${retryCount}`;
+    
     const img = new Image();
-    img.src = `${url}${url.includes('?') ? '&' : '?'}t=${retryCount}`;
+    img.src = imageUrl;
     
     img.onload = () => {
       setIsLoaded(true);
@@ -40,6 +46,7 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
     };
     
     img.onerror = () => {
+      console.error(`Failed to load image: ${imageUrl}`);
       setIsError(true);
       setIsLoaded(false);
     };
@@ -60,7 +67,13 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
     setIsError(false);
     setIsLoaded(false);
     setRetryCount(prev => prev + 1);
+    console.log(`Retrying image load for ${id}, attempt: ${retryCount + 1}`);
   };
+
+  // Determine image URL with cache busting
+  const imageUrl = url.includes('?') 
+    ? `${url}&cache=${Date.now()}-${retryCount}`
+    : `${url}?cache=${Date.now()}-${retryCount}`;
 
   return (
     <motion.div
@@ -81,7 +94,8 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
         >
           {!isError ? (
             <img
-              src={`${url}${url.includes('?') ? '&' : '?'}t=${retryCount}`}
+              ref={imgRef}
+              src={imageUrl}
               alt={title}
               className={cn(
                 "absolute inset-0 w-full h-full object-cover transition-all duration-500",
