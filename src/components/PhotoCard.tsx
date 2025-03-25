@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Tag } from 'lucide-react';
+import { Tag, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface PhotoCardProps {
   id: string;
@@ -22,9 +23,18 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
   const [isLoaded, setIsLoaded] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const displayTags = classification?.tags?.slice(0, 3) || [];
   const hasClassification = classification && displayTags.length > 0;
+
+  const handleRetry = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsError(false);
+    setIsLoaded(false);
+    setRetryCount(prev => prev + 1);
+  };
 
   return (
     <motion.div
@@ -39,13 +49,13 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
         <div 
           className={cn(
             "relative w-full overflow-hidden",
-            !isLoaded && "bg-photo-200 loading-shimmer"
+            !isLoaded && !isError && "bg-photo-200 loading-shimmer"
           )}
           style={{ paddingBottom: `${(1 / aspectRatio) * 100}%` }}
         >
           {!isError ? (
             <img
-              src={`${url}?w=600&q=80`}
+              src={`${url}?w=600&q=80&t=${retryCount}`}
               alt={title}
               className={cn(
                 "absolute inset-0 w-full h-full object-cover transition-all duration-500",
@@ -56,8 +66,17 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
               onError={() => setIsError(true)}
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-photo-200 text-photo-500">
-              Unable to load image
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-photo-200 text-photo-500">
+              <AlertCircle className="w-8 h-8 mb-2 text-photo-500" />
+              <p className="text-sm mb-2">Unable to load image</p>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={handleRetry}
+                className="mt-2"
+              >
+                Retry
+              </Button>
             </div>
           )}
           
