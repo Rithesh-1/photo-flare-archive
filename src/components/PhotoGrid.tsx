@@ -62,6 +62,7 @@ const PhotoGrid = () => {
           id={photo.id}
           url={photo.url}
           title={photo.title}
+          classification={photo.classification}
         />
       ))}
     </div>

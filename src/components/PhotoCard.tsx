@@ -55,7 +55,7 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
         >
           {!isError ? (
             <img
-              src={`${url}?w=600&q=80&t=${retryCount}`}
+              src={`${url}${url.includes('?') ? '&' : '?'}t=${retryCount}`}
               alt={title}
               className={cn(
                 "absolute inset-0 w-full h-full object-cover transition-all duration-500",

@@ -31,7 +31,13 @@ const UploadButton = () => {
   const processUpload = async (file: File) => {
     try {
       setIsUploading(true);
-      await uploadPhoto(file);
+      
+      // Create a low-res preview for the UI display
+      const previewUrl = URL.createObjectURL(file);
+      
+      // Pass both the original file and preview URL
+      await uploadPhoto(file, previewUrl);
+      
       toast.success('Photo uploaded successfully');
     } catch (error) {
       console.error('Upload error:', error);
@@ -55,9 +61,9 @@ const UploadButton = () => {
       return false;
     }
     
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage('File is too large. Maximum size is 5MB');
+    // Check file size - increased to 25MB to allow for higher quality images
+    if (file.size > 25 * 1024 * 1024) {
+      setErrorMessage('File is too large. Maximum size is 25MB');
       setErrorDialogOpen(true);
       return false;
     }

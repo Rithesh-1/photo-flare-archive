@@ -5,14 +5,25 @@ import Layout from '@/components/Layout';
 import { usePhotos } from '@/context/PhotoContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Heart, Tag, Sparkles, Image } from 'lucide-react';
+import { ArrowLeft, Heart, Tag, Sparkles, Download, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { photos, toggleFavorite, isFavorite } = usePhotos();
+  const { photos, toggleFavorite, isFavorite, deletePhoto, downloadPhoto } = usePhotos();
   
   const photo = photos.find(p => p.id === id);
   
@@ -29,10 +40,19 @@ const PhotoDetail = () => {
   
   const isPhotoFavorite = isFavorite(photo.id);
   
+  const handleDelete = () => {
+    deletePhoto(photo.id);
+    navigate('/');
+  };
+  
+  const handleDownload = () => {
+    downloadPhoto(photo.id);
+  };
+  
   return (
     <Layout>
       <div className="py-6">
-        <div className="flex items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -44,6 +64,43 @@ const PhotoDetail = () => {
               Back to Photos
             </Link>
           </Button>
+          
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownload}
+              className="flex items-center"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Download Original
+            </Button>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex items-center"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the photo. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
