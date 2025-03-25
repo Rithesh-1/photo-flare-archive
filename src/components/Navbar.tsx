@@ -2,16 +2,20 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Search, Menu, X, Image, Grid, Heart, Sparkles } from 'lucide-react';
+import { Search, Menu, X, Image, Grid, Heart, Sparkles, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAppConfig } from '@/context/AppConfigContext';
+import { useDatabase } from '@/context/DatabaseContext';
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { appName, logoUrl } = useAppConfig();
+  const { isOffline, mode } = useDatabase();
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
@@ -25,7 +29,8 @@ const Navbar = () => {
     { icon: <Image size={20} />, label: 'Photos', path: '/' },
     { icon: <Grid size={20} />, label: 'Albums', path: '/albums' },
     { icon: <Heart size={20} />, label: 'Favorites', path: '/favorites' },
-    { icon: <Sparkles size={20} />, label: 'Classifier', path: '/classifier' }
+    { icon: <Sparkles size={20} />, label: 'Classifier', path: '/classifier' },
+    { icon: <Settings size={20} />, label: 'Admin', path: '/admin' }
   ];
 
   return (
@@ -37,9 +42,18 @@ const Navbar = () => {
           </Button>
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Image size={20} className="text-primary" />
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="w-6 h-6 object-contain" />
+              ) : (
+                <Image size={20} className="text-primary" />
+              )}
             </div>
-            <h1 className="text-xl font-medium text-photo-800 hidden md:block">PhotoFlare</h1>
+            <h1 className="text-xl font-medium text-photo-800 hidden md:block">{appName}</h1>
+            {isOffline && (
+              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                Offline
+              </span>
+            )}
           </Link>
         </div>
 

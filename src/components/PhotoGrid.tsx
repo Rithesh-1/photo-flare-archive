@@ -2,14 +2,16 @@
 import React from 'react';
 import PhotoCard from './PhotoCard';
 import { usePhotos } from '@/context/PhotoContext';
+import { useDatabase } from '@/context/DatabaseContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, RefreshCw, Database, Cloud } from 'lucide-react';
 import { toast } from 'sonner';
 
 const PhotoGrid = () => {
   const { photos, loading, uploadPhoto } = usePhotos();
+  const { mode, isOffline, syncStatus, pendingChanges } = useDatabase();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -74,6 +76,11 @@ const PhotoGrid = () => {
         <h3 className="text-xl font-semibold text-photo-800 mb-2">No photos yet</h3>
         <p className="text-photo-500 max-w-md mb-6">
           Upload your first photo to get started. Your photos will appear here.
+          {isOffline && mode === 'cloud' && (
+            <span className="block mt-2 text-amber-500">
+              You're currently offline. Photos will be saved locally and synced when you reconnect.
+            </span>
+          )}
         </p>
         <Button className="flex items-center gap-2" variant="outline">
           <UploadCloud className="w-4 h-4" />
@@ -92,19 +99,48 @@ const PhotoGrid = () => {
     );
   }
 
-  // Display the photo grid with optimizations
+  // Display the photo grid with storage mode indicator
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {photos.map((photo) => (
-        <PhotoCard
-          key={photo.id}
-          id={photo.id}
-          url={photo.url}
-          title={photo.title}
-          classification={photo.classification}
-        />
-      ))}
-    </div>
+    <>
+      {/* Status bar for storage mode and sync status */}
+      <div className="mb-6 flex justify-between items-center">
+        <div className="flex items-center gap-2 text-sm">
+          <div className={`rounded-full h-2 w-2 ${isOffline ? 'bg-amber-500' : 'bg-green-500'}`}></div>
+          <span className="flex items-center gap-1.5">
+            {mode === 'local' ? (
+              <>
+                <Database className="h-4 w-4" />
+                <span>Local Storage</span>
+              </>
+            ) : (
+              <>
+                <Cloud className="h-4 w-4" />
+                <span>Cloud Storage {isOffline ? '(Offline)' : ''}</span>
+              </>
+            )}
+          </span>
+        </div>
+        
+        {syncStatus === 'pending' && (
+          <div className="flex items-center gap-2 text-amber-500 text-sm">
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            <span>{pendingChanges} changes pending sync</span>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {photos.map((photo) => (
+          <PhotoCard
+            key={photo.id}
+            id={photo.id}
+            url={photo.url}
+            title={photo.title}
+            classification={photo.classification}
+          />
+        ))}
+      </div>
+    </>
   );
 };
 
