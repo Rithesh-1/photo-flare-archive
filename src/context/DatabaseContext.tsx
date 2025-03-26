@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAppConfig } from './AppConfigContext';
 import { Photo } from '@/types/photo';
+import { toast } from 'sonner';
 
 export type StorageMode = 'local' | 'cloud';
 
@@ -27,14 +28,13 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'pending' | 'error'>('synced');
   const [pendingChanges, setPendingChanges] = useState<number>(0);
-  const { toast } = useAppConfig();
+  const { } = useAppConfig();
 
   // Monitor online/offline status
   useEffect(() => {
     const handleOnline = () => {
       setIsOffline(false);
-      toast({
-        title: "You're back online",
+      toast("You're back online", {
         description: "Syncing your data...",
         duration: 2000,
       });
@@ -44,8 +44,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const handleOffline = () => {
       setIsOffline(true);
-      toast({
-        title: "You're offline",
+      toast("You're offline", {
         description: "Changes will be saved locally until you reconnect",
         duration: 2000,
       });
@@ -58,7 +57,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [toast]);
+  }, []);
 
   // Save storage mode preference
   useEffect(() => {
@@ -79,16 +78,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setPendingChanges(0);
       setSyncStatus('synced');
       
-      toast({
-        title: "Sync completed",
+      toast("Sync completed", {
         description: "All your changes have been saved to the cloud",
         duration: 1500,
       });
     } catch (error) {
       console.error("Sync failed:", error);
       setSyncStatus('error');
-      toast({
-        title: "Sync failed",
+      toast("Sync failed", {
         description: "Please try again later",
         variant: "destructive",
         duration: 2000,
@@ -142,8 +139,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const clearLocalStorage = async (): Promise<void> => {
     try {
       localStorage.removeItem('localPhotos');
-      toast({
-        title: "Local storage cleared",
+      toast("Local storage cleared", {
         description: "All locally stored photos have been removed",
         duration: 1500,
       });
