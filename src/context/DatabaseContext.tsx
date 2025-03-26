@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAppConfig } from './AppConfigContext';
 import { Photo } from '@/types/photo';
