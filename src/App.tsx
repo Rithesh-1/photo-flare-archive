@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PhotoProvider } from "./context/PhotoContext";
 import { DatabaseProvider } from "./context/DatabaseContext";
 import { AppConfigProvider } from "./context/AppConfigContext";
+import { AlbumProvider } from "./context/AlbumContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PhotoDetail from "./pages/PhotoDetail";
@@ -23,19 +24,21 @@ const App = () => (
       <AppConfigProvider>
         <DatabaseProvider>
           <PhotoProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/photo/:id" element={<PhotoDetail />} />
-                <Route path="/albums" element={<Albums />} />
-                <Route path="/favorites" element={<Favorites />} />
-                <Route path="/classifier" element={<ImageClassifier />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-            <Toaster />
-            <Sonner richColors closeButton position="top-right" duration={3000} />
+            <AlbumProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/photo/:id" element={<PhotoDetail />} />
+                  <Route path="/albums" element={<Albums />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/classifier" element={<ImageClassifier />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+              <Toaster />
+              <Sonner richColors closeButton position="top-right" duration={3000} />
+            </AlbumProvider>
           </PhotoProvider>
         </DatabaseProvider>
       </AppConfigProvider>
