@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { Photo } from '@/context/PhotoContext';
+import { toast } from 'sonner';
+import { useAppConfig } from './AppConfigContext';
+import { Photo } from '@/types/photo';
 
 export type StorageMode = 'local' | 'cloud';
 
@@ -27,7 +27,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'pending' | 'error'>('synced');
   const [pendingChanges, setPendingChanges] = useState<number>(0);
-  const { toast } = useToast();
+  const { toast } = useAppConfig();
 
   // Monitor online/offline status
   useEffect(() => {
