@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -12,19 +13,20 @@ interface AppConfigContextType {
   setStorageLimitMB: (limit: number) => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  environment: string;
   toast: typeof toast;
 }
 
 const AppConfigContext = createContext<AppConfigContextType | undefined>(undefined);
 
 export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize state from localStorage if available
+  // Initialize state from environment variables or localStorage
   const [appName, setAppNameState] = useState<string>(() => {
-    return localStorage.getItem('appName') || 'PhotoFlare';
+    return import.meta.env.VITE_APP_NAME || localStorage.getItem('appName') || 'PhotoFlare';
   });
   
   const [primaryColor, setPrimaryColorState] = useState<string>(() => {
-    return localStorage.getItem('primaryColor') || '#3b82f6';
+    return import.meta.env.VITE_PRIMARY_COLOR || localStorage.getItem('primaryColor') || '#3b82f6';
   });
   
   const [logoUrl, setLogoUrlState] = useState<string>(() => {
@@ -32,13 +34,18 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   });
   
   const [storageLimitMB, setStorageLimitMBState] = useState<number>(() => {
+    const envLimit = import.meta.env.VITE_STORAGE_LIMIT_MB;
     const savedLimit = localStorage.getItem('storageLimitMB');
-    return savedLimit ? parseInt(savedLimit) : 100;
+    return envLimit ? parseInt(envLimit) : (savedLimit ? parseInt(savedLimit) : 100);
   });
   
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const savedMode = localStorage.getItem('darkMode');
     return savedMode ? savedMode === 'true' : false;
+  });
+  
+  const [environment] = useState<string>(() => {
+    return import.meta.env.VITE_ENVIRONMENT || 'development';
   });
 
   // Update localStorage when state changes
@@ -145,6 +152,7 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setStorageLimitMB,
         isDarkMode,
         toggleDarkMode,
+        environment,
         toast,
       }}
     >

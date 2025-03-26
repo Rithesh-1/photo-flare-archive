@@ -87,7 +87,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSyncStatus('error');
       toast("Sync failed", {
         description: "Please try again later",
-        variant: "destructive",
+        // Fix: Sonner doesn't use 'variant' but 'style' or specific methods
+        style: { backgroundColor: 'red', color: 'white' },
         duration: 2000,
       });
     }
