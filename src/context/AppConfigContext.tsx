@@ -1,5 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 interface AppConfigContextType {
   appName: string;
@@ -12,6 +12,7 @@ interface AppConfigContextType {
   setStorageLimitMB: (limit: number) => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  toast: typeof toast;
 }
 
 const AppConfigContext = createContext<AppConfigContextType | undefined>(undefined);
@@ -144,6 +145,7 @@ export const AppConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setStorageLimitMB,
         isDarkMode,
         toggleDarkMode,
+        toast,
       }}
     >
       {children}
