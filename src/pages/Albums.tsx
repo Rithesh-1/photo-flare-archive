@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Plus, FolderPlus } from 'lucide-react';
@@ -12,6 +12,24 @@ const AlbumsPage = () => {
   const { albums, deleteAlbum } = useAlbums();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const handleEvent = (e: Event) => {
+      if ('detail' in e) {
+        const customEvent = e as CustomEvent;
+        if (customEvent.detail?.photoId) {
+          setSelectedPhotoId(customEvent.detail.photoId);
+          setIsCreateDialogOpen(true);
+        }
+      }
+    };
+
+    document.addEventListener('open-create-album-with-photo', handleEvent);
+    
+    return () => {
+      document.removeEventListener('open-create-album-with-photo', handleEvent);
+    };
+  }, []);
 
   const handleCreateAlbum = () => {
     setSelectedPhotoId(undefined);

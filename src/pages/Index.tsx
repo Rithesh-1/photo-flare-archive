@@ -1,11 +1,22 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import PhotoGrid from '@/components/PhotoGrid';
 import UploadButton from '@/components/UploadButton';
 import { PhotoProvider } from '@/context/PhotoContext';
+import { Button } from '@/components/ui/button';
+import { Plus, Album } from 'lucide-react';
+import CreateAlbumDialog from '@/components/CreateAlbumDialog';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleCreateAlbum = () => {
+    setIsCreateDialogOpen(true);
+  };
+
   return (
     <PhotoProvider>
       <Layout>
@@ -17,10 +28,25 @@ const Index = () => {
                 View, organize, and share all your photos
               </p>
             </div>
-            <UploadButton />
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={handleCreateAlbum}
+              >
+                <Album className="h-4 w-4" />
+                Create Album
+              </Button>
+              <UploadButton />
+            </div>
           </div>
           <PhotoGrid />
         </div>
+
+        <CreateAlbumDialog 
+          open={isCreateDialogOpen} 
+          onOpenChange={setIsCreateDialogOpen}
+        />
       </Layout>
     </PhotoProvider>
   );

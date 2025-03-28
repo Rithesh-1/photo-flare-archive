@@ -7,6 +7,15 @@ import { Tag, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AddToAlbumDropdown from './AddToAlbumDropdown';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu";
+import { useAlbums } from '@/context/AlbumContext';
+import { useNavigate } from 'react-router-dom';
 
 interface PhotoCardProps {
   id: string;
@@ -26,6 +35,8 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
   const [isHovered, setIsHovered] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const imgRef = useRef<HTMLImageElement>(null);
+  const { albums, addPhotoToAlbum } = useAlbums();
+  const navigate = useNavigate();
   
   // Pre-load the image to prevent layout shifts
   useEffect(() => {
@@ -71,105 +82,146 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
     console.log(`Retrying image load for ${id}, attempt: ${retryCount + 1}`);
   };
 
+  const handleAddToNewAlbum = () => {
+    document.dispatchEvent(new CustomEvent('open-create-album-with-photo', { 
+      detail: { photoId: id } 
+    }));
+  };
+
   // Determine image URL with cache busting
   const imageUrl = url.includes('?') 
     ? `${url}&cache=${Date.now()}-${retryCount}`
     : `${url}?cache=${Date.now()}-${retryCount}`;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
-      className="rounded-xl overflow-hidden photo-card-shadow photo-card-hover"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="relative">
-        <Link to={`/photo/${id}`} className="block relative">
-          <div 
-            className={cn(
-              "relative w-full overflow-hidden",
-              !isLoaded && !isError && "bg-photo-200 loading-shimmer"
-            )}
-            style={{ paddingBottom: `${(1 / aspectRatio) * 100}%` }}
-          >
-            {!isError ? (
-              <img
-                ref={imgRef}
-                src={imageUrl}
-                alt={title}
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="rounded-xl overflow-hidden photo-card-shadow photo-card-hover"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <div className="relative">
+            <Link to={`/photo/${id}`} className="block relative">
+              <div 
                 className={cn(
-                  "absolute inset-0 w-full h-full object-cover transition-all duration-500",
-                  isLoaded ? "opacity-100" : "opacity-0"
+                  "relative w-full overflow-hidden",
+                  !isLoaded && !isError && "bg-photo-200 loading-shimmer"
                 )}
-                loading="lazy"
-                onLoad={() => setIsLoaded(true)}
-                onError={() => setIsError(true)}
-              />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-photo-200 text-photo-500">
-                <AlertCircle className="w-8 h-8 mb-2 text-photo-500" />
-                <p className="text-sm mb-2">Unable to load image</p>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={handleRetry}
-                  className="mt-2"
-                >
-                  Retry
-                </Button>
+                style={{ paddingBottom: `${(1 / aspectRatio) * 100}%` }}
+              >
+                {!isError ? (
+                  <img
+                    ref={imgRef}
+                    src={imageUrl}
+                    alt={title}
+                    className={cn(
+                      "absolute inset-0 w-full h-full object-cover transition-all duration-500",
+                      isLoaded ? "opacity-100" : "opacity-0"
+                    )}
+                    loading="lazy"
+                    onLoad={() => setIsLoaded(true)}
+                    onError={() => setIsError(true)}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-photo-200 text-photo-500">
+                    <AlertCircle className="w-8 h-8 mb-2 text-photo-500" />
+                    <p className="text-sm mb-2">Unable to load image</p>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={handleRetry}
+                      className="mt-2"
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Link>
+            
+            {/* Photo actions that appear on hover */}
+            {isLoaded && (
+              <div 
+                className={cn(
+                  "absolute top-2 right-2 transition-opacity duration-300 flex gap-1",
+                  isHovered ? "opacity-100" : "opacity-0"
+                )}
+              >
+                <AddToAlbumDropdown photoId={id} />
+              </div>
+            )}
+
+            {/* Classification tags overlay */}
+            {hasClassification && isLoaded && (
+              <div 
+                className={cn(
+                  "absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent",
+                  "transition-opacity duration-300",
+                  isHovered ? "opacity-100" : "opacity-0"
+                )}
+              >
+                <div className="flex flex-wrap gap-1">
+                  {displayTags.map((tag, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className="bg-black/40 text-white border-none text-xs backdrop-blur-sm"
+                    >
+                      <Tag className="w-3 h-3 mr-1" />
+                      {tag}
+                    </Badge>
+                  ))}
+                  
+                  {classification?.faces > 0 && (
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-primary/70 text-white border-none text-xs backdrop-blur-sm"
+                    >
+                      {classification.faces} Face{classification.faces > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
               </div>
             )}
           </div>
-        </Link>
+        </motion.div>
+      </ContextMenuTrigger>
+      
+      <ContextMenuContent>
+        <ContextMenuItem 
+          className="cursor-pointer"
+          onClick={() => navigate(`/photo/${id}`)}
+        >
+          View Details
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem 
+          className="cursor-pointer"
+          onClick={handleAddToNewAlbum}
+        >
+          Create New Album with Photo
+        </ContextMenuItem>
         
-        {/* Photo actions that appear on hover */}
-        {isLoaded && (
-          <div 
-            className={cn(
-              "absolute top-2 right-2 transition-opacity duration-300 flex gap-1",
-              isHovered ? "opacity-100" : "opacity-0"
-            )}
-          >
-            <AddToAlbumDropdown photoId={id} />
-          </div>
+        {albums.length > 0 && (
+          <>
+            <ContextMenuSeparator />
+            {albums.map(album => (
+              <ContextMenuItem 
+                key={album.id}
+                className="cursor-pointer"
+                onClick={() => addPhotoToAlbum(id, album.id)}
+              >
+                Add to "{album.name}"
+              </ContextMenuItem>
+            ))}
+          </>
         )}
-
-        {/* Classification tags overlay */}
-        {hasClassification && isLoaded && (
-          <div 
-            className={cn(
-              "absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent",
-              "transition-opacity duration-300",
-              isHovered ? "opacity-100" : "opacity-0"
-            )}
-          >
-            <div className="flex flex-wrap gap-1">
-              {displayTags.map((tag, index) => (
-                <Badge 
-                  key={index} 
-                  variant="secondary" 
-                  className="bg-black/40 text-white border-none text-xs backdrop-blur-sm"
-                >
-                  <Tag className="w-3 h-3 mr-1" />
-                  {tag}
-                </Badge>
-              ))}
-              
-              {classification?.faces > 0 && (
-                <Badge 
-                  variant="secondary" 
-                  className="bg-primary/70 text-white border-none text-xs backdrop-blur-sm"
-                >
-                  {classification.faces} Face{classification.faces > 1 ? 's' : ''}
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </motion.div>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 };
 

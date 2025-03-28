@@ -40,6 +40,13 @@ const AddToAlbumDropdown: React.FC<AddToAlbumDropdownProps> = ({ photoId }) => {
     }
   };
 
+  const handleCreateNewAlbum = () => {
+    // Dispatch custom event to trigger the album creation dialog
+    document.dispatchEvent(new CustomEvent('open-create-album-with-photo', { 
+      detail: { photoId } 
+    }));
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -74,10 +81,7 @@ const AddToAlbumDropdown: React.FC<AddToAlbumDropdownProps> = ({ photoId }) => {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="flex items-center text-primary"
-          onClick={() => {
-            // Create new album dialog link
-            document.dispatchEvent(new Event('open-create-album-with-photo'));
-          }}
+          onClick={handleCreateNewAlbum}
         >
           <Plus className="h-4 w-4 mr-2" />
           Create New Album

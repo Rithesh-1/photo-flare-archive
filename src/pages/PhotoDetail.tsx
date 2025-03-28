@@ -1,13 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { usePhotos } from '@/context/PhotoContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Heart, Tag, Sparkles, Download, Trash2 } from 'lucide-react';
+import { ArrowLeft, Heart, Tag, Sparkles, Download, Trash2, Album } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useAlbums } from '@/context/AlbumContext';
+import CreateAlbumDialog from '@/components/CreateAlbumDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,11 +21,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
 
 const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { photos, toggleFavorite, isFavorite, deletePhoto, downloadPhoto } = usePhotos();
+  const { albums, addPhotoToAlbum, removePhotoFromAlbum, isPhotoInAlbum } = useAlbums();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
   const photo = photos.find(p => p.id === id);
   
@@ -48,6 +60,23 @@ const PhotoDetail = () => {
   const handleDownload = () => {
     downloadPhoto(photo.id);
   };
+
+  const handleAddToAlbum = (albumId: string) => {
+    const album = albums.find(a => a.id === albumId);
+    if (!album) return;
+
+    const isInAlbum = isPhotoInAlbum(photo.id, albumId);
+    
+    if (isInAlbum) {
+      removePhotoFromAlbum(photo.id, albumId);
+    } else {
+      addPhotoToAlbum(photo.id, albumId);
+    }
+  };
+
+  const handleCreateNewAlbum = () => {
+    setIsCreateDialogOpen(true);
+  };
   
   return (
     <Layout>
@@ -66,6 +95,51 @@ const PhotoDetail = () => {
           </Button>
           
           <div className="flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center"
+                >
+                  <Album className="h-4 w-4 mr-1" />
+                  Add to Album
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Add to Album</DropdownMenuLabel>
+                
+                {albums.length === 0 ? (
+                  <DropdownMenuItem disabled className="text-muted-foreground">
+                    No albums available
+                  </DropdownMenuItem>
+                ) : (
+                  albums.map((album) => {
+                    const isInAlbum = isPhotoInAlbum(photo.id, album.id);
+                    return (
+                      <DropdownMenuItem
+                        key={album.id}
+                        onClick={() => handleAddToAlbum(album.id)}
+                        className="flex items-center justify-between"
+                      >
+                        <span>{album.name}</span>
+                        {isInAlbum && <motion.span initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.2 }}>✓</motion.span>}
+                      </DropdownMenuItem>
+                    );
+                  })
+                )}
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="flex items-center text-primary"
+                  onClick={handleCreateNewAlbum}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New Album
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Button
               variant="outline"
               size="sm"
@@ -222,6 +296,12 @@ const PhotoDetail = () => {
           </div>
         </div>
       </div>
+
+      <CreateAlbumDialog 
+        open={isCreateDialogOpen} 
+        onOpenChange={setIsCreateDialogOpen}
+        initialPhotoId={photo.id}
+      />
     </Layout>
   );
 };

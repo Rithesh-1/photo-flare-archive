@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Photo } from '@/types/photo';
 
@@ -14,7 +13,7 @@ export interface Album {
 
 interface AlbumContextType {
   albums: Album[];
-  createAlbum: (name: string, description?: string, initialPhotoId?: string) => void;
+  createAlbum: (name: string, description?: string, initialPhotoIds?: string[]) => void;
   addPhotoToAlbum: (photoId: string, albumId: string) => void;
   removePhotoFromAlbum: (photoId: string, albumId: string) => void;
   deleteAlbum: (albumId: string) => void;
@@ -28,13 +27,28 @@ const AlbumContext = createContext<AlbumContextType | undefined>(undefined);
 export const AlbumProvider = ({ children }: { children: ReactNode }) => {
   const [albums, setAlbums] = useState<Album[]>([]);
 
-  const createAlbum = (name: string, description?: string, initialPhotoId?: string) => {
+  useEffect(() => {
+    const handleOpenCreateAlbumWithPhoto = (event: Event) => {
+      if ('detail' in event) {
+        const customEvent = event as CustomEvent;
+        console.log('Open create album with photo:', customEvent.detail?.photoId);
+      }
+    };
+
+    document.addEventListener('open-create-album-with-photo', handleOpenCreateAlbumWithPhoto);
+    
+    return () => {
+      document.removeEventListener('open-create-album-with-photo', handleOpenCreateAlbumWithPhoto);
+    };
+  }, []);
+
+  const createAlbum = (name: string, description?: string, initialPhotoIds?: string[]) => {
     if (!name.trim()) {
       toast.error('Album name cannot be empty');
       return;
     }
 
-    const photoIds = initialPhotoId ? [initialPhotoId] : [];
+    const photoIds = initialPhotoIds ? initialPhotoIds : [];
 
     const newAlbum: Album = {
       id: Date.now().toString(),
@@ -46,8 +60,10 @@ export const AlbumProvider = ({ children }: { children: ReactNode }) => {
 
     setAlbums(prev => [...prev, newAlbum]);
     toast.success('Album created', {
-      description: `"${name}" has been created successfully`
+      description: `"${name}" has been created successfully${photoIds.length > 0 ? ` with ${photoIds.length} photos` : ''}`
     });
+    
+    return newAlbum;
   };
 
   const addPhotoToAlbum = (photoId: string, albumId: string) => {

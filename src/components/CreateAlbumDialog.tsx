@@ -1,20 +1,12 @@
-
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useAlbums } from '@/context/AlbumContext';
-
-const formSchema = z.object({
-  name: z.string().min(1, 'Album name is required'),
-  description: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { useNavigate } from 'react-router-dom';
+import GalleryPhotoSelector from './GalleryPhotoSelector';
 
 interface CreateAlbumDialogProps {
   open: boolean;
@@ -24,91 +16,124 @@ interface CreateAlbumDialogProps {
 
 const CreateAlbumDialog: React.FC<CreateAlbumDialogProps> = ({ 
   open, 
-  onOpenChange, 
-  initialPhotoId 
+  onOpenChange,
+  initialPhotoId
 }) => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
+  const [isCreating, setIsCreating] = useState(false);
   const { createAlbum } = useAlbums();
-  const [photoToAdd, setPhotoToAdd] = useState<string | undefined>(initialPhotoId);
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-    },
-  });
+  const navigate = useNavigate();
 
-  // Listen for global event to open dialog with a specific photo
+  // Reset form when dialog opens/closes
   useEffect(() => {
-    const handleOpenWithPhoto = () => {
-      if (!open) {
-        onOpenChange(true);
-      }
-    };
+    if (open) {
+      setName('');
+      setDescription('');
+      setSelectedPhotoIds(initialPhotoId ? [initialPhotoId] : []);
+      setIsCreating(false);
+    }
+  }, [open, initialPhotoId]);
 
-    document.addEventListener('open-create-album-with-photo', handleOpenWithPhoto);
+  const handleSelectPhoto = (photoId: string) => {
+    setSelectedPhotoIds(prev => {
+      // If the photo is already selected, remove it
+      if (prev.includes(photoId)) {
+        return prev.filter(id => id !== photoId);
+      } 
+      // Otherwise add it
+      return [...prev, photoId];
+    });
+  };
+
+  const handleSubmit = () => {
+    if (!name.trim()) return;
     
-    return () => {
-      document.removeEventListener('open-create-album-with-photo', handleOpenWithPhoto);
-    };
-  }, [open, onOpenChange]);
-  
-  // Update photoToAdd when initialPhotoId changes
-  useEffect(() => {
-    setPhotoToAdd(initialPhotoId);
-  }, [initialPhotoId]);
-
-  const onSubmit = (values: FormValues) => {
-    createAlbum(values.name, values.description, photoToAdd);
-    form.reset();
-    setPhotoToAdd(undefined);
-    onOpenChange(false);
+    setIsCreating(true);
+    
+    try {
+      const newAlbum = createAlbum(
+        name.trim(), 
+        description.trim() || undefined, 
+        selectedPhotoIds.length > 0 ? selectedPhotoIds : undefined
+      );
+      
+      onOpenChange(false);
+      
+      // Navigate to the new album
+      if (newAlbum) {
+        setTimeout(() => {
+          navigate(`/album/${newAlbum.id}`);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Failed to create album:', error);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Create New Album</DialogTitle>
+          <DialogDescription>
+            Create a new album to organize your photos
+          </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Album Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Summer Vacation 2023" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="album-name">Album Name</Label>
+            <Input
+              id="album-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter album name"
             />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Photos from our beach trip" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="album-description">Description (optional)</Label>
+            <Textarea
+              id="album-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter album description"
+              rows={3}
             />
-            {photoToAdd && (
-              <div className="text-sm text-muted-foreground">
-                A photo will be added to this album upon creation.
-              </div>
-            )}
-            <DialogFooter>
-              <Button type="submit">Create Album</Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          </div>
+          
+          <div className="grid gap-2 mt-2">
+            <Label>Select Photos</Label>
+            <GalleryPhotoSelector 
+              selectedPhotoIds={selectedPhotoIds}
+              onSelectPhoto={handleSelectPhoto}
+              initialPhotoId={initialPhotoId}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              {selectedPhotoIds.length} photo{selectedPhotoIds.length !== 1 ? 's' : ''} selected
+            </p>
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isCreating}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit}
+            disabled={!name.trim() || isCreating}
+          >
+            {isCreating ? 'Creating...' : 'Create Album'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
