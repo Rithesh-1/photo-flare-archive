@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,10 +19,16 @@ type FormValues = z.infer<typeof formSchema>;
 interface CreateAlbumDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialPhotoId?: string;
 }
 
-const CreateAlbumDialog: React.FC<CreateAlbumDialogProps> = ({ open, onOpenChange }) => {
+const CreateAlbumDialog: React.FC<CreateAlbumDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  initialPhotoId 
+}) => {
   const { createAlbum } = useAlbums();
+  const [photoToAdd, setPhotoToAdd] = useState<string | undefined>(initialPhotoId);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -32,9 +38,30 @@ const CreateAlbumDialog: React.FC<CreateAlbumDialogProps> = ({ open, onOpenChang
     },
   });
 
+  // Listen for global event to open dialog with a specific photo
+  useEffect(() => {
+    const handleOpenWithPhoto = () => {
+      if (!open) {
+        onOpenChange(true);
+      }
+    };
+
+    document.addEventListener('open-create-album-with-photo', handleOpenWithPhoto);
+    
+    return () => {
+      document.removeEventListener('open-create-album-with-photo', handleOpenWithPhoto);
+    };
+  }, [open, onOpenChange]);
+  
+  // Update photoToAdd when initialPhotoId changes
+  useEffect(() => {
+    setPhotoToAdd(initialPhotoId);
+  }, [initialPhotoId]);
+
   const onSubmit = (values: FormValues) => {
-    createAlbum(values.name, values.description);
+    createAlbum(values.name, values.description, photoToAdd);
     form.reset();
+    setPhotoToAdd(undefined);
     onOpenChange(false);
   };
 
@@ -72,6 +99,11 @@ const CreateAlbumDialog: React.FC<CreateAlbumDialogProps> = ({ open, onOpenChang
                 </FormItem>
               )}
             />
+            {photoToAdd && (
+              <div className="text-sm text-muted-foreground">
+                A photo will be added to this album upon creation.
+              </div>
+            )}
             <DialogFooter>
               <Button type="submit">Create Album</Button>
             </DialogFooter>

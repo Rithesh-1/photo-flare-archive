@@ -11,8 +11,10 @@ import { useAlbums } from '@/context/AlbumContext';
 const AlbumsPage = () => {
   const { albums, deleteAlbum } = useAlbums();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>(undefined);
 
   const handleCreateAlbum = () => {
+    setSelectedPhotoId(undefined);
     setIsCreateDialogOpen(true);
   };
 
@@ -77,7 +79,8 @@ const AlbumsPage = () => {
 
       <CreateAlbumDialog 
         open={isCreateDialogOpen} 
-        onOpenChange={setIsCreateDialogOpen} 
+        onOpenChange={setIsCreateDialogOpen}
+        initialPhotoId={selectedPhotoId}
       />
     </Layout>
   );

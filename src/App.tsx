@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PhotoDetail from "./pages/PhotoDetail";
 import Albums from "./pages/Albums";
+import AlbumDetail from "./pages/AlbumDetail";
 import Favorites from "./pages/Favorites";
 import ImageClassifier from "./pages/ImageClassifier";
 import Admin from "./pages/Admin";
@@ -30,6 +31,7 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/photo/:id" element={<PhotoDetail />} />
                   <Route path="/albums" element={<Albums />} />
+                  <Route path="/albums/:id" element={<AlbumDetail />} />
                   <Route path="/favorites" element={<Favorites />} />
                   <Route path="/classifier" element={<ImageClassifier />} />
                   <Route path="/admin" element={<Admin />} />

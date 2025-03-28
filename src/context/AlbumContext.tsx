@@ -14,12 +14,13 @@ export interface Album {
 
 interface AlbumContextType {
   albums: Album[];
-  createAlbum: (name: string, description?: string) => void;
+  createAlbum: (name: string, description?: string, initialPhotoId?: string) => void;
   addPhotoToAlbum: (photoId: string, albumId: string) => void;
   removePhotoFromAlbum: (photoId: string, albumId: string) => void;
   deleteAlbum: (albumId: string) => void;
   updateAlbum: (albumId: string, data: Partial<Album>) => void;
   getAlbumPhotos: (albumId: string, photos: Photo[]) => Photo[];
+  isPhotoInAlbum: (photoId: string, albumId: string) => boolean;
 }
 
 const AlbumContext = createContext<AlbumContextType | undefined>(undefined);
@@ -27,17 +28,19 @@ const AlbumContext = createContext<AlbumContextType | undefined>(undefined);
 export const AlbumProvider = ({ children }: { children: ReactNode }) => {
   const [albums, setAlbums] = useState<Album[]>([]);
 
-  const createAlbum = (name: string, description?: string) => {
+  const createAlbum = (name: string, description?: string, initialPhotoId?: string) => {
     if (!name.trim()) {
       toast.error('Album name cannot be empty');
       return;
     }
 
+    const photoIds = initialPhotoId ? [initialPhotoId] : [];
+
     const newAlbum: Album = {
       id: Date.now().toString(),
       name: name.trim(),
       description,
-      photoIds: [],
+      photoIds,
       createdAt: new Date()
     };
 
@@ -99,6 +102,11 @@ export const AlbumProvider = ({ children }: { children: ReactNode }) => {
     return photos.filter(photo => album.photoIds.includes(photo.id));
   };
 
+  const isPhotoInAlbum = (photoId: string, albumId: string): boolean => {
+    const album = albums.find(a => a.id === albumId);
+    return album ? album.photoIds.includes(photoId) : false;
+  };
+
   return (
     <AlbumContext.Provider value={{
       albums,
@@ -107,7 +115,8 @@ export const AlbumProvider = ({ children }: { children: ReactNode }) => {
       removePhotoFromAlbum,
       deleteAlbum,
       updateAlbum,
-      getAlbumPhotos
+      getAlbumPhotos,
+      isPhotoInAlbum
     }}>
       {children}
     </AlbumContext.Provider>
