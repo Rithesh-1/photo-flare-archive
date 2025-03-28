@@ -6,8 +6,9 @@ import PhotoCard from '@/components/PhotoCard';
 import { useAlbums } from '@/context/AlbumContext';
 import { usePhotos } from '@/context/PhotoContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash, Photos } from 'lucide-react';
+import { ArrowLeft, Trash, Image } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Photo as PhotoType } from '@/types/photo';
 
 const AlbumDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +33,20 @@ const AlbumDetail = () => {
     );
   }
 
-  const albumPhotos = getAlbumPhotos(album.id, photos);
+  // Convert photos to the expected format
+  const convertedPhotos = photos.map(photo => ({
+    id: photo.id,
+    url: photo.url,
+    title: photo.title,
+    description: photo.description,
+    tags: photo.classification?.tags || [],
+    dateAdded: photo.createdAt?.toISOString() || new Date().toISOString(),
+    isFavorite: false,
+    albumId: album.photoIds.includes(photo.id) ? album.id : undefined,
+    thumbnailUrl: photo.url
+  })) as PhotoType[];
+
+  const albumPhotos = getAlbumPhotos(album.id, convertedPhotos);
 
   const handleDeleteAlbum = () => {
     if (window.confirm(`Are you sure you want to delete "${album.name}"? This cannot be undone.`)) {
@@ -83,7 +97,7 @@ const AlbumDetail = () => {
             className="flex flex-col items-center justify-center py-20 text-center"
           >
             <div className="w-16 h-16 rounded-full bg-photo-100 flex items-center justify-center mb-4">
-              <Photos className="h-8 w-8 text-photo-400" />
+              <Image className="h-8 w-8 text-photo-400" />
             </div>
             <h3 className="text-xl font-semibold text-photo-800 mb-2">No photos in this album</h3>
             <p className="text-photo-500 max-w-md mb-6">
@@ -105,9 +119,8 @@ const AlbumDetail = () => {
               <PhotoCard
                 key={photo.id}
                 id={photo.id}
-                url={photo.url}
+                url={photo.url || photo.thumbnailUrl || ''}
                 title={photo.title}
-                classification={photo.classification}
               />
             ))}
           </motion.div>
