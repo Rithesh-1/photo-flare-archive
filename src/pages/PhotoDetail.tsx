@@ -5,7 +5,7 @@ import Layout from '@/components/Layout';
 import { usePhotos } from '@/context/PhotoContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Heart, Tag, Sparkles, Download, Trash2, Album } from 'lucide-react';
+import { ArrowLeft, Heart, Tag, Sparkles, Download, Trash2, Album, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAlbums } from '@/context/AlbumContext';

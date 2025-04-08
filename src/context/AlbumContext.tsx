@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Photo } from '@/types/photo';
@@ -13,7 +14,7 @@ export interface Album {
 
 interface AlbumContextType {
   albums: Album[];
-  createAlbum: (name: string, description?: string, initialPhotoIds?: string[]) => void;
+  createAlbum: (name: string, description?: string, initialPhotoIds?: string[]) => Album | undefined;
   addPhotoToAlbum: (photoId: string, albumId: string) => void;
   removePhotoFromAlbum: (photoId: string, albumId: string) => void;
   deleteAlbum: (albumId: string) => void;
@@ -42,10 +43,10 @@ export const AlbumProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const createAlbum = (name: string, description?: string, initialPhotoIds?: string[]) => {
+  const createAlbum = (name: string, description?: string, initialPhotoIds?: string[]): Album | undefined => {
     if (!name.trim()) {
       toast.error('Album name cannot be empty');
-      return;
+      return undefined;
     }
 
     const photoIds = initialPhotoIds ? initialPhotoIds : [];

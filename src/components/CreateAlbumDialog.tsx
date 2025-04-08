@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -61,8 +62,8 @@ const CreateAlbumDialog: React.FC<CreateAlbumDialogProps> = ({
       
       onOpenChange(false);
       
-      // Navigate to the new album
-      if (newAlbum) {
+      // Navigate to the new album if it was created
+      if (newAlbum && newAlbum.id) {
         setTimeout(() => {
           navigate(`/album/${newAlbum.id}`);
         }, 500);
