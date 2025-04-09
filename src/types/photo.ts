@@ -9,4 +9,18 @@ export interface Photo {
   isFavorite: boolean;
   albumId?: string;
   thumbnailUrl?: string;
+  originalUrl?: string;
+  classification?: {
+    tags: string[];
+    faces: number;
+    quality: { 
+      score: number; 
+      issue?: string 
+    };
+  };
+  location?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
 }

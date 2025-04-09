@@ -8,6 +8,7 @@ import { PhotoProvider } from "./context/PhotoContext";
 import { DatabaseProvider } from "./context/DatabaseContext";
 import { AppConfigProvider } from "./context/AppConfigContext";
 import { AlbumProvider } from "./context/AlbumContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PhotoDetail from "./pages/PhotoDetail";
@@ -17,6 +18,7 @@ import Favorites from "./pages/Favorites";
 import ImageClassifier from "./pages/ImageClassifier";
 import Admin from "./pages/Admin";
 import Organize from "./pages/Organize";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -24,27 +26,30 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AppConfigProvider>
-        <DatabaseProvider>
-          <PhotoProvider>
-            <AlbumProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/photo/:id" element={<PhotoDetail />} />
-                  <Route path="/albums" element={<Albums />} />
-                  <Route path="/albums/:id" element={<AlbumDetail />} />
-                  <Route path="/favorites" element={<Favorites />} />
-                  <Route path="/classifier" element={<ImageClassifier />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/organize" element={<Organize />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-              <Toaster />
-              <Sonner richColors closeButton position="top-right" duration={3000} />
-            </AlbumProvider>
-          </PhotoProvider>
-        </DatabaseProvider>
+        <ThemeProvider>
+          <DatabaseProvider>
+            <PhotoProvider>
+              <AlbumProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/photo/:id" element={<PhotoDetail />} />
+                    <Route path="/albums" element={<Albums />} />
+                    <Route path="/albums/:id" element={<AlbumDetail />} />
+                    <Route path="/favorites" element={<Favorites />} />
+                    <Route path="/classifier" element={<ImageClassifier />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/organize" element={<Organize />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+                <Toaster />
+                <Sonner richColors closeButton position="top-right" duration={3000} />
+              </AlbumProvider>
+            </PhotoProvider>
+          </DatabaseProvider>
+        </ThemeProvider>
       </AppConfigProvider>
     </TooltipProvider>
   </QueryClientProvider>

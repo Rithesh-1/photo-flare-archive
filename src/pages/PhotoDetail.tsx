@@ -5,13 +5,20 @@ import Layout from '@/components/Layout';
 import { usePhotos } from '@/context/PhotoContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Heart, Tag, Sparkles, Download, Trash2, Album, Plus, Maximize, ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { 
+  ArrowLeft, Heart, Tag, Sparkles, Download, Trash2, 
+  Album, Plus, Maximize, ChevronLeft, ChevronRight, 
+  MapPin, Edit, Calendar, Save
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAlbums } from '@/context/AlbumContext';
 import CreateAlbumDialog from '@/components/CreateAlbumDialog';
 import FullscreenImageViewer from '@/components/FullscreenImageViewer';
 import { Photo } from '@/types/photo';
+import GenerateImageDescription from '@/components/GenerateImageDescription';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +47,9 @@ const PhotoDetail = () => {
   const { albums, addPhotoToAlbum, removePhotoFromAlbum, isPhotoInAlbum } = useAlbums();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedDescription, setEditedDescription] = useState('');
   
   const photo = photos.find(p => p.id === id);
   
@@ -58,8 +69,18 @@ const PhotoDetail = () => {
     isFavorite: isFavorite(p.id),
     thumbnailUrl: p.url,
     tags: p.classification?.tags,
-    classification: p.classification
+    classification: p.classification,
+    location: p.location
   })) as Photo[];
+  
+  // Reset edited values when photo changes
+  useEffect(() => {
+    if (photo) {
+      setEditedTitle(photo.title);
+      setEditedDescription(photo.description || '');
+      setIsEditing(false);
+    }
+  }, [photo]);
   
   if (!photo) {
     return (
@@ -111,6 +132,23 @@ const PhotoDetail = () => {
   const navigateToPhoto = (photoId: string | null) => {
     if (photoId) {
       navigate(`/photo/${photoId}`);
+    }
+  };
+
+  const handleStartEditing = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveEdits = () => {
+    // In a real app, you would update the photo in your state or database
+    toast.success('Photo details updated');
+    setIsEditing(false);
+  };
+
+  const handleDescriptionGenerated = (description: string) => {
+    setEditedDescription(description);
+    if (!isEditing) {
+      setIsEditing(true);
     }
   };
   
@@ -262,38 +300,151 @@ const PhotoDetail = () => {
           </div>
           
           <div>
-            <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="bg-card rounded-xl p-6 shadow-sm">
               <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-semibold">{photo.title}</h1>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => toggleFavorite(photo.id)}
-                  className={cn(
-                    "transition-all",
-                    isPhotoFavorite ? "text-red-500" : "text-gray-400"
+                <AnimatePresence mode="wait">
+                  {isEditing ? (
+                    <motion.div 
+                      key="editing"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex-1"
+                    >
+                      <Input
+                        value={editedTitle}
+                        onChange={(e) => setEditedTitle(e.target.value)}
+                        className="text-xl font-semibold mb-2"
+                        placeholder="Photo title"
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.h1 
+                      key="viewing"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-2xl font-semibold"
+                    >
+                      {photo.title}
+                    </motion.h1>
                   )}
-                >
-                  <Heart className={cn(
-                    "h-6 w-6 transition-all",
-                    isPhotoFavorite && "fill-red-500"
-                  )} />
-                </Button>
+                </AnimatePresence>
+                
+                <div className="flex gap-2">
+                  <AnimatePresence mode="wait">
+                    {isEditing ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                      >
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={handleSaveEdits}
+                          className="text-primary"
+                        >
+                          <Save className="h-5 w-5" />
+                        </Button>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleStartEditing}
+                          className="text-muted-foreground"
+                        >
+                          <Edit className="h-5 w-5" />
+                        </Button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleFavorite(photo.id)}
+                    className={cn(
+                      "transition-all",
+                      isPhotoFavorite ? "text-red-500" : "text-muted-foreground"
+                    )}
+                  >
+                    <Heart className={cn(
+                      "h-5 w-5 transition-all",
+                      isPhotoFavorite && "fill-red-500"
+                    )} />
+                  </Button>
+                </div>
               </div>
               
-              {photo.description && (
-                <p className="text-gray-600 mb-6">{photo.description}</p>
+              <AnimatePresence mode="wait">
+                {isEditing ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="mb-6"
+                  >
+                    <Textarea
+                      value={editedDescription}
+                      onChange={(e) => setEditedDescription(e.target.value)}
+                      className="resize-none h-28"
+                      placeholder="Add a description..."
+                    />
+                  </motion.div>
+                ) : (
+                  photo.description && (
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-muted-foreground mb-6"
+                    >
+                      {photo.description}
+                    </motion.p>
+                  )
+                )}
+              </AnimatePresence>
+              
+              {isEditing && (
+                <div className="mb-6">
+                  <GenerateImageDescription
+                    imageUrl={photo.url}
+                    onDescriptionGenerated={handleDescriptionGenerated}
+                  />
+                </div>
               )}
               
               <div className="border-t pt-4 mt-4">
-                <h3 className="text-sm font-medium text-gray-500 mb-3">DETAILS</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">DETAILS</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Created</span>
+                    <span className="flex items-center text-muted-foreground">
+                      <Calendar className="h-4 w-4 mr-1.5" />
+                      Created
+                    </span>
                     <span className="font-medium">
                       {photo.createdAt.toLocaleDateString()}
                     </span>
                   </div>
+
+                  {photo.location && (
+                    <div className="flex justify-between items-start">
+                      <span className="flex items-center text-muted-foreground">
+                        <MapPin className="h-4 w-4 mr-1.5" />
+                        Location
+                      </span>
+                      <span className="font-medium text-right">
+                        {photo.location.address || `${photo.location.latitude.toFixed(6)}, ${photo.location.longitude.toFixed(6)}`}
+                      </span>
+                    </div>
+                  )}
                   
                   {/* Display classification data if available */}
                   {photo.classification && (
@@ -301,18 +452,18 @@ const PhotoDetail = () => {
                       <div className="border-t my-4 pt-4">
                         <div className="flex items-center gap-2 mb-3">
                           <Sparkles size={16} className="text-primary" />
-                          <h3 className="text-sm font-medium text-gray-500">CLASSIFICATION</h3>
+                          <h3 className="text-sm font-medium text-muted-foreground">CLASSIFICATION</h3>
                         </div>
                         
                         {/* Image Quality */}
                         <div className="mb-4">
                           <div className="flex justify-between mb-1">
-                            <span className="text-gray-600">Quality</span>
+                            <span className="text-muted-foreground">Quality</span>
                             <span className="font-medium">
                               {photo.classification.quality.score}%
                             </span>
                           </div>
-                          <div className="w-full bg-gray-100 rounded-full h-2">
+                          <div className="w-full bg-muted rounded-full h-2">
                             <motion.div 
                               className={cn(
                                 "h-2 rounded-full",
@@ -328,7 +479,7 @@ const PhotoDetail = () => {
                             />
                           </div>
                           {photo.classification.quality.issue && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {photo.classification.quality.issue}
                             </p>
                           )}
@@ -336,7 +487,7 @@ const PhotoDetail = () => {
                         
                         {/* Faces Detected */}
                         <div className="flex justify-between mb-3">
-                          <span className="text-gray-600">Faces Detected</span>
+                          <span className="text-muted-foreground">Faces Detected</span>
                           <span className="font-medium">
                             {photo.classification.faces}
                           </span>
@@ -345,15 +496,15 @@ const PhotoDetail = () => {
                         {/* Tags */}
                         <div className="mt-4">
                           <div className="flex items-center gap-1 mb-2">
-                            <Tag size={14} className="text-gray-500" />
-                            <span className="text-gray-600 text-sm">Tags</span>
+                            <Tag size={14} className="text-muted-foreground" />
+                            <span className="text-muted-foreground text-sm">Tags</span>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {photo.classification.tags.map((tag, index) => (
                               <Badge 
                                 key={index} 
                                 variant="secondary" 
-                                className="bg-gray-100 text-gray-700"
+                                className="bg-secondary text-secondary-foreground"
                               >
                                 {tag}
                               </Badge>
