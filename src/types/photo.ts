@@ -1,26 +1,21 @@
-
 export interface Photo {
   id: string;
   url: string;
   title: string;
-  description?: string;
-  tags?: string[];
-  dateAdded: string; // ISO string
+  description: string;
+  date: string;
+  tags: string[];
+  albumIds: string[];
   isFavorite: boolean;
-  albumId?: string;
-  thumbnailUrl?: string;
-  originalUrl?: string;
-  classification?: {
-    tags: string[];
-    faces: number;
-    quality: { 
-      score: number; 
-      issue?: string 
-    };
+  metadata?: {
+    width: number;
+    height: number;
+    size: number;
+    format: string;
   };
   location?: {
     latitude: number;
     longitude: number;
-    address?: string;
+    name: string;
   };
 }
