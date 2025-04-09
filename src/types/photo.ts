@@ -13,7 +13,7 @@ export interface Photo {
   thumbnailUrl?: string;
   originalUrl?: string;
   dateAdded?: string; // For backward compatibility
-  albumId?: string; // For backward compatibility
+  albumId?: string; // For backward compatibility with older components
   
   // Classification data for AI features
   classification?: {

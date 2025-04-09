@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { usePhotos } from '@/context/PhotoContext';
 import { useDatabase } from '@/context/DatabaseContext';
@@ -32,7 +31,7 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
       description: photo.description || '',
       date: photo.createdAt.toISOString(),
       tags: photo.classification?.tags || [],
-      albumIds: photo.albumId ? [photo.albumId] : [],
+      albumIds: photo.albumId ? [photo.albumId] : [], // Correctly use albumId in the conversion
       isFavorite: false,
       originalUrl: photo.originalUrl,
       thumbnailUrl: photo.url,
@@ -64,7 +63,7 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
         photos
       }));
   }, [convertedPhotos]);
-
+  
   const handleOpenFullscreen = (index: number) => {
     setFullscreenIndex(index);
   };

@@ -22,7 +22,7 @@ const Favorites = () => {
     description: photo.description || '',
     date: photo.createdAt.toISOString(),
     tags: photo.classification?.tags || [],
-    albumIds: photo.albumId ? [photo.albumId] : [],
+    albumIds: photo.albumId ? [photo.albumId] : [], // Correctly use albumId in the conversion
     isFavorite: isFavorite(photo.id),
     originalUrl: photo.originalUrl,
     thumbnailUrl: photo.url,

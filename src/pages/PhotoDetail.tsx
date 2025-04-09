@@ -66,12 +66,12 @@ const PhotoDetail = () => {
     description: p.description || '',
     date: p.createdAt?.toISOString() || new Date().toISOString(),
     tags: p.classification?.tags || [],
-    albumIds: p.albumId ? [p.albumId] : [],
+    albumIds: p.albumId ? [p.albumId] : [], // Correctly use albumId in the conversion
     isFavorite: isFavorite(p.id),
     originalUrl: p.originalUrl,
     thumbnailUrl: p.url,
     classification: p.classification,
-    location: p.location
+    location: p.location // Include location in converted photos
   }));
   
   // Reset edited values when photo changes
