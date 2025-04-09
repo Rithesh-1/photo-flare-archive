@@ -21,12 +21,27 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
   const { mode, isOffline, syncStatus, pendingChanges } = useDatabase();
   const [viewMode, setViewMode] = useState<'grid' | 'date'>('grid');
 
+  // Convert context photos to the expected Photo type format
+  const convertedPhotos = useMemo(() => {
+    return photos.map(photo => ({
+      id: photo.id,
+      url: photo.url,
+      originalUrl: photo.originalUrl,
+      title: photo.title,
+      description: photo.description,
+      dateAdded: photo.createdAt.toISOString(), // Convert Date to ISO string
+      isFavorite: false, // Set default value
+      thumbnailUrl: photo.url,
+      tags: photo.classification?.tags
+    })) as Photo[];
+  }, [photos]);
+
   // Group photos by date
   const photosByDate = useMemo(() => {
     const groups: { [key: string]: Photo[] } = {};
     
-    photos.forEach(photo => {
-      const date = new Date(photo.createdAt);
+    convertedPhotos.forEach(photo => {
+      const date = new Date(photo.dateAdded);
       const dateKey = format(date, 'yyyy-MM-dd');
       
       if (!groups[dateKey]) {
@@ -44,7 +59,7 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
         formattedDate: format(new Date(date), 'MMMM d, yyyy'),
         photos
       }));
-  }, [photos]);
+  }, [convertedPhotos]);
 
   if (loading) {
     return (
@@ -86,7 +101,7 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
 
           <TabsContent value="grid" className="mt-0">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1">
-              {photos.map((photo) => (
+              {convertedPhotos.map((photo) => (
                 <Link to={`/photo/${photo.id}`} key={photo.id} className="block w-full">
                   <div className="relative group">
                     <AspectRatio ratio={1} className="bg-muted">
