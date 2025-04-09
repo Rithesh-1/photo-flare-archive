@@ -1,294 +1,160 @@
 
-# PhotoFlare: React Photo Management Application
+# PhotoFlow - Modern Web Photo Gallery
 
-PhotoFlare is a modern photo management web application built with React, TypeScript, Vite, and TailwindCSS. It features offline support, cloud syncing capabilities, and a responsive design.
-
-![PhotoFlare Screenshot](https://via.placeholder.com/800x400?text=PhotoFlare+Screenshot)
+PhotoFlow is a responsive web application for organizing, viewing, and managing your photo collection with intelligent classification features.
 
 ## Features
 
-- ✅ Photo gallery with grid and detail views
-- ✅ Organized view with date-based grouping
-- ✅ Offline-first architecture with local storage
-- ✅ Cloud sync when online
-- ✅ Customizable UI with theming options
-- ✅ Responsive design for all devices
-- ✅ Dark and light mode
-- ✅ Image classification capabilities
-- ✅ Favorites and albums organization
+- **Modern UI**: Clean, responsive interface for all devices
+- **Fullscreen Viewing**: View your photos in fullscreen mode with left/right navigation
+- **Multiple View Modes**: Grid view and date-based organization
+- **Image Classification**: AI-powered photo tagging and quality assessment
+- **Albums**: Create albums to organize your photo collection
+- **Favorites**: Mark and filter your favorite photos
+- **Offline Support**: Works even when offline with local storage
+- **Cloud Sync**: Synchronize your photos with cloud storage
 
-## Prerequisites
+## Deployment Instructions
 
-Before you begin, make sure you have the following installed:
-- [Node.js](https://nodejs.org/) (v14 or higher)
-- npm or [yarn](https://yarnpkg.com/)
+### Option 1: Deploy to Vercel
 
-## Installation
+The easiest way to deploy PhotoFlow is using Vercel:
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd photoflare
-   ```
+1. **Create a Vercel Account** at [https://vercel.com/signup](https://vercel.com/signup)
 
-2. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn
-   ```
-
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env.local
-   ```
-   Then edit `.env.local` with your specific configuration.
-
-## Environment Configuration
-
-PhotoFlare uses environment variables for configuration. Here's what each variable does:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| VITE_APP_NAME | Application name | PhotoFlare |
-| VITE_PRIMARY_COLOR | Primary color (hex) | #3b82f6 |
-| VITE_STORAGE_LIMIT_MB | Local storage limit in MB | 100 |
-| VITE_STORAGE_MODE | Default storage mode (local/cloud) | cloud |
-| VITE_ENVIRONMENT | Environment (development/production) | development |
-
-## Running the App Locally
-
-### Development Mode
-
-```bash
-npm run dev
-# or
-yarn dev
-```
-The app will be available at http://localhost:5173
-
-### Building for Production
-
-```bash
-npm run build
-# or
-yarn build
-```
-
-### Preview Production Build
-
-```bash
-npm run preview
-# or
-yarn preview
-```
-
-## Deployment Guide
-
-### Option 1: Deploy to Vercel (Recommended)
-
-1. Create a [Vercel account](https://vercel.com/signup) if you don't have one
-2. Install the Vercel CLI:
+2. **Install Vercel CLI** (optional)
    ```bash
    npm install -g vercel
    ```
-3. Log in to Vercel:
+
+3. **Deploy the Application**
+
+   **With GitHub Integration:**
+   - Push your code to a GitHub repository
+   - Import the project in Vercel dashboard
+   - Follow the prompts to configure your project
+
+   **Using Vercel CLI:**
    ```bash
+   # Login to Vercel
    vercel login
-   ```
-4. Deploy the application:
-   ```bash
+
+   # Deploy from your project directory
+   cd photoflow
    vercel
    ```
-5. For production deployment:
-   ```bash
-   vercel --prod
-   ```
 
-#### Environment Variables on Vercel
-
-1. Go to your project on the Vercel dashboard
-2. Navigate to Settings > Environment Variables
-3. Add all the variables from your `.env.local` file
+4. **Configure Environment Variables**
+   - Go to your project in the Vercel dashboard
+   - Navigate to Settings → Environment Variables
+   - Add the following variables:
+     ```
+     VITE_STORAGE_MODE=cloud
+     VITE_API_KEY=your_api_key_here
+     VITE_IMAGE_OPTIMIZER_URL=https://your-image-optimizer-url.com
+     ```
 
 ### Option 2: Deploy to Netlify
 
-1. Create a [Netlify account](https://app.netlify.com/signup) if you don't have one
-2. Install the Netlify CLI:
-   ```bash
-   npm install -g netlify-cli
-   ```
-3. Log in to Netlify:
-   ```bash
-   netlify login
-   ```
-4. Initialize Netlify in your project:
-   ```bash
-   netlify init
-   ```
-5. Create a `netlify.toml` file in your project root:
-   ```toml
-   [build]
-     command = "npm run build"
-     publish = "dist"
-     
-   [[redirects]]
-     from = "/*"
-     to = "/index.html"
-     status = 200
-   ```
-6. Deploy your site:
-   ```bash
-   netlify deploy --prod
-   ```
+1. **Create a Netlify Account** at [https://app.netlify.com/signup](https://app.netlify.com/signup)
 
-#### Environment Variables on Netlify
+2. **Deploy the Application**
 
-1. Go to your site settings on Netlify dashboard
-2. Navigate to Build & deploy > Environment
-3. Add all variables from your `.env.local` file
+   **With GitHub Integration:**
+   - Push your code to a GitHub repository
+   - In Netlify dashboard, click "New site from Git"
+   - Select your repository and follow the setup process
+   
+   **Manual Deployment:**
+   - Build your project locally:
+     ```bash
+     npm run build
+     ```
+   - Drag and drop the `dist` folder to Netlify
 
-### Option 3: Traditional Web Hosting
+3. **Configure Environment Variables**
+   - Go to Site settings → Environment variables
+   - Add the required environment variables (same as Vercel)
 
-1. Build the application:
+### Option 3: Traditional Hosting
+
+1. **Build the Application**
    ```bash
    npm run build
    ```
-2. The built files will be in the `dist` directory
-3. Upload the contents of the `dist` directory to your web server
-4. Configure your web server to serve the application:
 
-#### Apache Configuration (.htaccess)
-
-```apache
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
-</IfModule>
-```
-
-#### Nginx Configuration
-
-```nginx
-server {
-  listen 80;
-  server_name yourdomain.com;
-  root /path/to/dist;
-  
-  location / {
-    try_files $uri $uri/ /index.html;
-  }
-}
-```
-
-### Environment Variables with Traditional Hosting
-
-With traditional hosting, you'll need to build the application with environment variables set:
-
-1. Create a `.env.production` file with your production values
-2. Build the application:
-   ```bash
-   npm run build
+2. **Create Environment File**
+   Create a `.env.production` file in your project root with:
    ```
-3. The environment variables will be baked into the build
+   VITE_STORAGE_MODE=cloud
+   VITE_API_KEY=your_api_key_here
+   VITE_IMAGE_OPTIMIZER_URL=https://your-image-optimizer-url.com
+   ```
 
-## Post-Deployment Verification
+3. **Upload to Your Web Server**
+   - Upload the contents of the `dist` directory to your web server
+   - Ensure your server is configured for single-page applications
+   - For Apache, create a `.htaccess` file in your root directory:
+     ```
+     <IfModule mod_rewrite.c>
+       RewriteEngine On
+       RewriteBase /
+       RewriteRule ^index\.html$ - [L]
+       RewriteCond %{REQUEST_FILENAME} !-f
+       RewriteCond %{REQUEST_FILENAME} !-d
+       RewriteRule . /index.html [L]
+     </IfModule>
+     ```
+   - For Nginx, update your server configuration:
+     ```
+     location / {
+       try_files $uri $uri/ /index.html;
+     }
+     ```
 
-After deploying, verify that:
+## Environment Variables
 
-1. The application loads correctly
-2. Images can be uploaded and viewed
-3. Albums can be created and managed
-4. The organization view works as expected
-5. Offline mode functions properly
+| Variable | Description | Required |
+|----------|-------------|----------|
+| VITE_STORAGE_MODE | Storage mode: "local" or "cloud" | Yes |
+| VITE_API_KEY | API key for cloud services | Only for cloud mode |
+| VITE_IMAGE_OPTIMIZER_URL | URL for the image optimization service | No |
+| VITE_ENABLE_ANALYTICS | Enable analytics tracking | No |
 
-## Common Deployment Issues
+## Troubleshooting
 
-### 404 Errors on Page Refresh
+### Images Not Loading
 
-If you encounter 404 errors when refreshing the page or accessing a route directly, it means your server isn't configured to serve the `index.html` file for all routes. Review the server configuration examples above.
+If images are not loading:
 
-### CORS Issues
+1. Check your console for CORS errors
+2. Ensure your image optimizer service is running
+3. Verify the correct image paths in your database
 
-If you're using a separate API backend, you might encounter CORS issues. Make sure your API server allows requests from your frontend domain.
+### Offline Mode Issues
 
-### Environment Variable Problems
+If offline mode is not working:
 
-If features aren't working as expected, check that all environment variables are properly set in your deployment environment.
+1. Make sure your browser supports IndexedDB
+2. Clear site data and reload the application
+3. Check browser console for any storage-related errors
 
-## Architecture
+### Cloud Sync Problems
 
-PhotoFlare is built with a modern React architecture:
+If cloud sync is failing:
 
-- **React + TypeScript**: For type-safe component development
-- **Vite**: For fast development and optimized builds
-- **TailwindCSS**: For utility-first styling
-- **shadcn/ui**: For beautiful, accessible UI components
-- **React Router**: For client-side routing
-- **Context API**: For state management
-- **React Query**: For data fetching and caching
-- **Sonner**: For toast notifications
+1. Verify your API key is correct
+2. Check your network connection
+3. Ensure the cloud service is operational
 
-## Storage Modes
+## Getting Support
 
-PhotoFlare supports two storage modes:
+For help with deployment or technical issues:
 
-1. **Local Storage Mode**: All photos are stored in the browser's localStorage
-2. **Cloud Mode**: Photos sync to cloud storage when online (simulated in this version)
-
-You can switch between modes in the application settings.
-
-## Offline Support
-
-PhotoFlare is designed to work offline by default:
-- Automatically detects network status
-- Stores changes locally when offline
-- Syncs changes when back online
-- Provides visual indicators for sync status
-
-## Development
-
-### Project Structure
-
-```
-photoflare/
-├── public/             # Static assets
-├── src/
-│   ├── components/     # React components
-│   ├── context/        # React context providers
-│   ├── hooks/          # Custom React hooks
-│   ├── lib/            # Utility functions
-│   ├── pages/          # Page components
-│   ├── types/          # TypeScript type definitions
-│   ├── utils/          # Helper utilities
-│   ├── App.tsx         # Main app component
-│   └── main.tsx        # Application entry point
-├── .env.example        # Example environment variables
-├── index.html          # HTML template
-├── tsconfig.json       # TypeScript configuration
-└── vite.config.ts      # Vite configuration
-```
-
-### Contributing
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add some amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a pull request
+- Open an issue on our GitHub repository
+- Contact support at support@photoflow-app.com
+- Check our documentation at docs.photoflow-app.com
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgements
-
-- [React](https://reactjs.org/)
-- [Vite](https://vitejs.dev/)
-- [TailwindCSS](https://tailwindcss.com/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Lovable](https://lovable.dev/)

@@ -1,15 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { usePhotos } from '@/context/PhotoContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Heart, Tag, Sparkles, Download, Trash2, Album, Plus } from 'lucide-react';
+import { ArrowLeft, Heart, Tag, Sparkles, Download, Trash2, Album, Plus, Maximize, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAlbums } from '@/context/AlbumContext';
 import CreateAlbumDialog from '@/components/CreateAlbumDialog';
+import FullscreenImageViewer from '@/components/FullscreenImageViewer';
+import { Photo } from '@/types/photo';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,8 +38,28 @@ const PhotoDetail = () => {
   const { photos, toggleFavorite, isFavorite, deletePhoto, downloadPhoto } = usePhotos();
   const { albums, addPhotoToAlbum, removePhotoFromAlbum, isPhotoInAlbum } = useAlbums();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   
   const photo = photos.find(p => p.id === id);
+  
+  // Get previous and next photo IDs for navigation
+  const currentIndex = photos.findIndex(p => p.id === id);
+  const prevPhotoId = currentIndex > 0 ? photos[currentIndex - 1].id : null;
+  const nextPhotoId = currentIndex < photos.length - 1 ? photos[currentIndex + 1].id : null;
+  
+  // Convert photos to the expected Photo type format for fullscreen viewer
+  const convertedPhotos = photos.map(p => ({
+    id: p.id,
+    url: p.url,
+    originalUrl: p.originalUrl,
+    title: p.title,
+    description: p.description,
+    dateAdded: p.createdAt.toISOString(),
+    isFavorite: isFavorite(p.id),
+    thumbnailUrl: p.url,
+    tags: p.classification?.tags,
+    classification: p.classification
+  })) as Photo[];
   
   if (!photo) {
     return (
@@ -77,6 +99,20 @@ const PhotoDetail = () => {
   const handleCreateNewAlbum = () => {
     setIsCreateDialogOpen(true);
   };
+
+  const openFullscreen = () => {
+    setIsFullscreenOpen(true);
+  };
+
+  const closeFullscreen = () => {
+    setIsFullscreenOpen(false);
+  };
+
+  const navigateToPhoto = (photoId: string | null) => {
+    if (photoId) {
+      navigate(`/photo/${photoId}`);
+    }
+  };
   
   return (
     <Layout>
@@ -95,96 +131,133 @@ const PhotoDetail = () => {
           </Button>
           
           <div className="flex gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <Album className="h-4 w-4 mr-1" />
-                  Add to Album
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Add to Album</DropdownMenuLabel>
-                
-                {albums.length === 0 ? (
-                  <DropdownMenuItem disabled className="text-muted-foreground">
-                    No albums available
-                  </DropdownMenuItem>
-                ) : (
-                  albums.map((album) => {
-                    const isInAlbum = isPhotoInAlbum(photo.id, album.id);
-                    return (
-                      <DropdownMenuItem
-                        key={album.id}
-                        onClick={() => handleAddToAlbum(album.id)}
-                        className="flex items-center justify-between"
-                      >
-                        <span>{album.name}</span>
-                        {isInAlbum && <motion.span initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.2 }}>✓</motion.span>}
-                      </DropdownMenuItem>
-                    );
-                  })
-                )}
-                
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="flex items-center text-primary"
-                  onClick={handleCreateNewAlbum}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create New Album
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {prevPhotoId && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigateToPhoto(prevPhotoId)}
+                className="flex items-center"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+            )}
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              className="flex items-center"
-            >
-              <Download className="h-4 w-4 mr-1" />
-              Download Original
-            </Button>
-            
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete the photo. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {nextPhotoId && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigateToPhoto(nextPhotoId)}
+                className="flex items-center"
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            )}
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2">
-            <div className="rounded-xl overflow-hidden mb-4">
+            <div className="rounded-xl overflow-hidden mb-4 relative group">
               <img 
                 src={photo.url}
                 alt={photo.title}
-                className="w-full object-cover"
+                className="w-full object-cover cursor-pointer"
+                onClick={openFullscreen}
               />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 bg-black/30 text-white hover:bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={openFullscreen}
+              >
+                <Maximize className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center"
+                    >
+                      <Album className="h-4 w-4 mr-1" />
+                      Add to Album
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Add to Album</DropdownMenuLabel>
+                    
+                    {albums.length === 0 ? (
+                      <DropdownMenuItem disabled className="text-muted-foreground">
+                        No albums available
+                      </DropdownMenuItem>
+                    ) : (
+                      albums.map((album) => {
+                        const isInAlbum = isPhotoInAlbum(photo.id, album.id);
+                        return (
+                          <DropdownMenuItem
+                            key={album.id}
+                            onClick={() => handleAddToAlbum(album.id)}
+                            className="flex items-center justify-between"
+                          >
+                            <span>{album.name}</span>
+                            {isInAlbum && <motion.span initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.2 }}>✓</motion.span>}
+                          </DropdownMenuItem>
+                        );
+                      })
+                    )}
+                    
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="flex items-center text-primary"
+                      onClick={handleCreateNewAlbum}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New Album
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownload}
+                  className="flex items-center"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download Original
+                </Button>
+              </div>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="flex items-center"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the photo. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
           
@@ -301,6 +374,19 @@ const PhotoDetail = () => {
         open={isCreateDialogOpen} 
         onOpenChange={setIsCreateDialogOpen}
         initialPhotoId={photo.id}
+      />
+      
+      {/* Fullscreen image viewer */}
+      <FullscreenImageViewer
+        photos={convertedPhotos}
+        currentIndex={currentIndex}
+        isOpen={isFullscreenOpen}
+        onClose={closeFullscreen}
+        onNavigate={(index) => {
+          if (index !== currentIndex) {
+            navigate(`/photo/${convertedPhotos[index].id}`);
+          }
+        }}
       />
     </Layout>
   );

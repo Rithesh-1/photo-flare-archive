@@ -6,11 +6,12 @@ import { Photo } from '@/types/photo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Calendar, Database, Image } from 'lucide-react';
+import { Calendar, Database, Image, Maximize } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
+import FullscreenImageViewer from './FullscreenImageViewer';
 
 interface OrganizedPhotoViewerProps {
   className?: string;
@@ -20,6 +21,7 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
   const { photos, loading } = usePhotos();
   const { mode, isOffline, syncStatus, pendingChanges } = useDatabase();
   const [viewMode, setViewMode] = useState<'grid' | 'date'>('grid');
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
 
   // Convert context photos to the expected Photo type format
   const convertedPhotos = useMemo(() => {
@@ -32,7 +34,8 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
       dateAdded: photo.createdAt.toISOString(), // Convert Date to ISO string
       isFavorite: false, // Set default value
       thumbnailUrl: photo.url,
-      tags: photo.classification?.tags
+      tags: photo.classification?.tags,
+      classification: photo.classification
     })) as Photo[];
   }, [photos]);
 
@@ -60,6 +63,18 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
         photos
       }));
   }, [convertedPhotos]);
+
+  const handleOpenFullscreen = (index: number) => {
+    setFullscreenIndex(index);
+  };
+
+  const handleCloseFullscreen = () => {
+    setFullscreenIndex(null);
+  };
+
+  const handleNavigateFullscreen = (newIndex: number) => {
+    setFullscreenIndex(newIndex);
+  };
 
   if (loading) {
     return (
@@ -101,19 +116,41 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
 
           <TabsContent value="grid" className="mt-0">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1">
-              {convertedPhotos.map((photo) => (
-                <Link to={`/photo/${photo.id}`} key={photo.id} className="block w-full">
-                  <div className="relative group">
-                    <AspectRatio ratio={1} className="bg-muted">
-                      <img 
-                        src={photo.url} 
-                        alt={photo.title}
-                        className="object-cover w-full h-full" 
-                        loading="lazy"
-                      />
-                    </AspectRatio>
+              {convertedPhotos.map((photo, index) => (
+                <div key={photo.id} className="relative group">
+                  <AspectRatio ratio={1} className="bg-muted">
+                    <img 
+                      src={photo.url} 
+                      alt={photo.title}
+                      className="object-cover w-full h-full cursor-pointer" 
+                      loading="lazy"
+                      onClick={() => handleOpenFullscreen(index)}
+                    />
+                  </AspectRatio>
+                  <div className="absolute inset-0 flex items-start justify-end p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="bg-black/30 text-white hover:bg-black/50 rounded-full h-7 w-7"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenFullscreen(index);
+                      }}
+                    >
+                      <Maximize className="h-4 w-4" />
+                    </Button>
                   </div>
-                </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="absolute left-1 bottom-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 text-white hover:bg-black/50 h-7"
+                  >
+                    <Link to={`/photo/${photo.id}`}>
+                      View
+                    </Link>
+                  </Button>
+                </div>
               ))}
             </div>
           </TabsContent>
@@ -127,20 +164,46 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
                       {group.formattedDate}
                     </h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1">
-                      {group.photos.map((photo) => (
-                        <Link to={`/photo/${photo.id}`} key={photo.id} className="block w-full">
-                          <div className="relative">
+                      {group.photos.map((photo, groupIndex) => {
+                        // Calculate the global index for this photo
+                        const globalIndex = convertedPhotos.findIndex(p => p.id === photo.id);
+                        return (
+                          <div key={photo.id} className="relative group">
                             <AspectRatio ratio={1} className="bg-muted">
                               <img 
                                 src={photo.url} 
                                 alt={photo.title}
-                                className="object-cover w-full h-full" 
+                                className="object-cover w-full h-full cursor-pointer" 
                                 loading="lazy"
+                                onClick={() => handleOpenFullscreen(globalIndex)}
                               />
                             </AspectRatio>
+                            <div className="absolute inset-0 flex items-start justify-end p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="bg-black/30 text-white hover:bg-black/50 rounded-full h-7 w-7"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenFullscreen(globalIndex);
+                                }}
+                              >
+                                <Maximize className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              asChild
+                              className="absolute left-1 bottom-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 text-white hover:bg-black/50 h-7"
+                            >
+                              <Link to={`/photo/${photo.id}`}>
+                                View
+                              </Link>
+                            </Button>
                           </div>
-                        </Link>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))
@@ -153,6 +216,15 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Fullscreen image viewer */}
+      <FullscreenImageViewer
+        photos={convertedPhotos}
+        currentIndex={fullscreenIndex !== null ? fullscreenIndex : 0}
+        isOpen={fullscreenIndex !== null}
+        onClose={handleCloseFullscreen}
+        onNavigate={handleNavigateFullscreen}
+      />
     </div>
   );
 };

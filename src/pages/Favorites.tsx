@@ -1,15 +1,44 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { usePhotos } from '@/context/PhotoContext';
 import PhotoCard from '@/components/PhotoCard';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { HomeIcon, ArrowLeft } from 'lucide-react';
+import { Photo } from '@/types/photo';
+import FullscreenImageViewer from '@/components/FullscreenImageViewer';
 
 const Favorites = () => {
-  const { photos, favorites, loading } = usePhotos();
+  const { photos, favorites, loading, isFavorite } = usePhotos();
   const favoritePhotos = photos.filter(photo => favorites.includes(photo.id));
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+
+  // Convert photos to the expected Photo type format for fullscreen viewer
+  const convertedPhotos = favoritePhotos.map(photo => ({
+    id: photo.id,
+    url: photo.url,
+    originalUrl: photo.originalUrl,
+    title: photo.title,
+    description: photo.description,
+    dateAdded: photo.createdAt.toISOString(),
+    isFavorite: isFavorite(photo.id),
+    thumbnailUrl: photo.url,
+    tags: photo.classification?.tags,
+    classification: photo.classification
+  })) as Photo[];
+
+  const handleOpenFullscreen = (index: number) => {
+    setFullscreenIndex(index);
+  };
+
+  const handleCloseFullscreen = () => {
+    setFullscreenIndex(null);
+  };
+
+  const handleNavigateFullscreen = (newIndex: number) => {
+    setFullscreenIndex(newIndex);
+  };
 
   return (
     <div className="container mx-auto py-4 px-4">
@@ -65,16 +94,27 @@ const Favorites = () => {
         </motion.div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {favoritePhotos.map((photo) => (
+          {favoritePhotos.map((photo, index) => (
             <PhotoCard
               key={photo.id}
               id={photo.id}
               url={photo.url}
               title={photo.title}
+              classification={photo.classification}
+              onFullscreen={() => handleOpenFullscreen(index)}
             />
           ))}
         </div>
       )}
+
+      {/* Fullscreen image viewer */}
+      <FullscreenImageViewer
+        photos={convertedPhotos}
+        currentIndex={fullscreenIndex !== null ? fullscreenIndex : 0}
+        isOpen={fullscreenIndex !== null}
+        onClose={handleCloseFullscreen}
+        onNavigate={handleNavigateFullscreen}
+      />
     </div>
   );
 };

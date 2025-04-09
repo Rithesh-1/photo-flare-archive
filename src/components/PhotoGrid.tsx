@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import PhotoCard from './PhotoCard';
 import { usePhotos } from '@/context/PhotoContext';
 import { useDatabase } from '@/context/DatabaseContext';
@@ -8,10 +8,27 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { UploadCloud, RefreshCw, Database, Cloud } from 'lucide-react';
 import { toast } from 'sonner';
+import { Photo } from '@/types/photo';
+import FullscreenImageViewer from './FullscreenImageViewer';
 
 const PhotoGrid = () => {
-  const { photos, loading, uploadPhoto } = usePhotos();
+  const { photos, loading, uploadPhoto, isFavorite } = usePhotos();
   const { mode, isOffline, syncStatus, pendingChanges } = useDatabase();
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+
+  // Convert photos to the expected Photo type format for fullscreen viewer
+  const convertedPhotos = photos.map(photo => ({
+    id: photo.id,
+    url: photo.url,
+    originalUrl: photo.originalUrl,
+    title: photo.title,
+    description: photo.description,
+    dateAdded: photo.createdAt.toISOString(),
+    isFavorite: isFavorite(photo.id),
+    thumbnailUrl: photo.url,
+    tags: photo.classification?.tags,
+    classification: photo.classification
+  })) as Photo[];
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -34,6 +51,18 @@ const PhotoGrid = () => {
       toast.error('Failed to upload image');
       event.target.value = '';
     }
+  };
+
+  const handleOpenFullscreen = (index: number) => {
+    setFullscreenIndex(index);
+  };
+
+  const handleCloseFullscreen = () => {
+    setFullscreenIndex(null);
+  };
+
+  const handleNavigateFullscreen = (newIndex: number) => {
+    setFullscreenIndex(newIndex);
   };
 
   // Display loading skeletons
@@ -130,16 +159,26 @@ const PhotoGrid = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {photos.map((photo) => (
+        {photos.map((photo, index) => (
           <PhotoCard
             key={photo.id}
             id={photo.id}
             url={photo.url}
             title={photo.title}
             classification={photo.classification}
+            onFullscreen={() => handleOpenFullscreen(index)}
           />
         ))}
       </div>
+
+      {/* Fullscreen image viewer */}
+      <FullscreenImageViewer
+        photos={convertedPhotos}
+        currentIndex={fullscreenIndex !== null ? fullscreenIndex : 0}
+        isOpen={fullscreenIndex !== null}
+        onClose={handleCloseFullscreen}
+        onNavigate={handleNavigateFullscreen}
+      />
     </>
   );
 };

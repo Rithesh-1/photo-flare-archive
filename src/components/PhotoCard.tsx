@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Tag, AlertCircle } from 'lucide-react';
+import { Tag, AlertCircle, Maximize } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AddToAlbumDropdown from './AddToAlbumDropdown';
@@ -27,9 +27,10 @@ interface PhotoCardProps {
     faces: number;
     quality: { score: number; issue?: string };
   };
+  onFullscreen?: () => void;
 }
 
-const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoCardProps) => {
+const PhotoCard = ({ id, url, title, aspectRatio = 1, classification, onFullscreen }: PhotoCardProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -88,6 +89,14 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
     }));
   };
 
+  const handleFullscreenClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onFullscreen) {
+      onFullscreen();
+    }
+  };
+
   // Determine image URL with cache busting
   const imageUrl = url.includes('?') 
     ? `${url}&cache=${Date.now()}-${retryCount}`
@@ -100,7 +109,7 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="rounded-xl overflow-hidden photo-card-shadow photo-card-hover"
+          className="rounded-none overflow-hidden photo-card-hover"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -151,6 +160,16 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
                   isHovered ? "opacity-100" : "opacity-0"
                 )}
               >
+                {onFullscreen && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="bg-black/40 text-white hover:bg-black/60 rounded-full h-7 w-7"
+                    onClick={handleFullscreenClick}
+                  >
+                    <Maximize className="h-4 w-4" />
+                  </Button>
+                )}
                 <AddToAlbumDropdown photoId={id} />
               </div>
             )}
@@ -198,6 +217,14 @@ const PhotoCard = ({ id, url, title, aspectRatio = 3/2, classification }: PhotoC
         >
           View Details
         </ContextMenuItem>
+        {onFullscreen && (
+          <ContextMenuItem 
+            className="cursor-pointer"
+            onClick={onFullscreen}
+          >
+            View Fullscreen
+          </ContextMenuItem>
+        )}
         <ContextMenuSeparator />
         <ContextMenuItem 
           className="cursor-pointer"

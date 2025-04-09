@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import PhotoCard from '@/components/PhotoCard';
@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trash, Image } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Photo as PhotoType } from '@/types/photo';
+import FullscreenImageViewer from '@/components/FullscreenImageViewer';
 
 const AlbumDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { albums, getAlbumPhotos, deleteAlbum } = useAlbums();
-  const { photos } = usePhotos();
+  const { photos, isFavorite } = usePhotos();
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
 
   const album = albums.find(a => a.id === id);
   
@@ -37,13 +39,15 @@ const AlbumDetail = () => {
   const convertedPhotos = photos.map(photo => ({
     id: photo.id,
     url: photo.url,
+    originalUrl: photo.originalUrl,
     title: photo.title,
     description: photo.description,
     tags: photo.classification?.tags || [],
     dateAdded: photo.createdAt?.toISOString() || new Date().toISOString(),
-    isFavorite: false,
+    isFavorite: isFavorite(photo.id),
     albumId: album.photoIds.includes(photo.id) ? album.id : undefined,
-    thumbnailUrl: photo.url
+    thumbnailUrl: photo.url,
+    classification: photo.classification
   })) as PhotoType[];
 
   const albumPhotos = getAlbumPhotos(album.id, convertedPhotos);
@@ -53,6 +57,18 @@ const AlbumDetail = () => {
       deleteAlbum(album.id);
       navigate('/albums');
     }
+  };
+
+  const handleOpenFullscreen = (index: number) => {
+    setFullscreenIndex(index);
+  };
+
+  const handleCloseFullscreen = () => {
+    setFullscreenIndex(null);
+  };
+
+  const handleNavigateFullscreen = (newIndex: number) => {
+    setFullscreenIndex(newIndex);
   };
 
   return (
@@ -115,17 +131,28 @@ const AlbumDetail = () => {
             transition={{ duration: 0.5 }}
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
           >
-            {albumPhotos.map((photo) => (
+            {albumPhotos.map((photo, index) => (
               <PhotoCard
                 key={photo.id}
                 id={photo.id}
                 url={photo.url || photo.thumbnailUrl || ''}
                 title={photo.title}
+                classification={photo.classification}
+                onFullscreen={() => handleOpenFullscreen(index)}
               />
             ))}
           </motion.div>
         )}
       </div>
+
+      {/* Fullscreen image viewer */}
+      <FullscreenImageViewer
+        photos={albumPhotos}
+        currentIndex={fullscreenIndex !== null ? fullscreenIndex : 0}
+        isOpen={fullscreenIndex !== null}
+        onClose={handleCloseFullscreen}
+        onNavigate={handleNavigateFullscreen}
+      />
     </Layout>
   );
 };
