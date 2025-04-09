@@ -58,20 +58,21 @@ const PhotoDetail = () => {
   const prevPhotoId = currentIndex > 0 ? photos[currentIndex - 1].id : null;
   const nextPhotoId = currentIndex < photos.length - 1 ? photos[currentIndex + 1].id : null;
   
-  // Convert photos to the expected Photo type format for fullscreen viewer
-  const convertedPhotos = photos.map(p => ({
+  // Convert photos to the Photo type format for fullscreen viewer
+  const convertedPhotos: Photo[] = photos.map(p => ({
     id: p.id,
     url: p.url,
-    originalUrl: p.originalUrl,
     title: p.title,
-    description: p.description,
-    dateAdded: p.createdAt.toISOString(),
+    description: p.description || '',
+    date: p.createdAt?.toISOString() || new Date().toISOString(),
+    tags: p.classification?.tags || [],
+    albumIds: p.albumId ? [p.albumId] : [],
     isFavorite: isFavorite(p.id),
+    originalUrl: p.originalUrl,
     thumbnailUrl: p.url,
-    tags: p.classification?.tags,
     classification: p.classification,
     location: p.location
-  })) as Photo[];
+  }));
   
   // Reset edited values when photo changes
   useEffect(() => {

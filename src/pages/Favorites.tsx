@@ -15,18 +15,19 @@ const Favorites = () => {
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
 
   // Convert photos to the expected Photo type format for fullscreen viewer
-  const convertedPhotos = favoritePhotos.map(photo => ({
+  const convertedPhotos: Photo[] = favoritePhotos.map(photo => ({
     id: photo.id,
     url: photo.url,
-    originalUrl: photo.originalUrl,
     title: photo.title,
-    description: photo.description,
-    dateAdded: photo.createdAt.toISOString(),
+    description: photo.description || '',
+    date: photo.createdAt.toISOString(),
+    tags: photo.classification?.tags || [],
+    albumIds: photo.albumId ? [photo.albumId] : [],
     isFavorite: isFavorite(photo.id),
+    originalUrl: photo.originalUrl,
     thumbnailUrl: photo.url,
-    tags: photo.classification?.tags,
     classification: photo.classification
-  })) as Photo[];
+  }));
 
   const handleOpenFullscreen = (index: number) => {
     setFullscreenIndex(index);

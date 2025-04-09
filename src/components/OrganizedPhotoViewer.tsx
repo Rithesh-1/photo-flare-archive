@@ -24,19 +24,20 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
 
   // Convert context photos to the expected Photo type format
-  const convertedPhotos = useMemo(() => {
+  const convertedPhotos: Photo[] = useMemo(() => {
     return photos.map(photo => ({
       id: photo.id,
       url: photo.url,
-      originalUrl: photo.originalUrl,
       title: photo.title,
-      description: photo.description,
-      dateAdded: photo.createdAt.toISOString(), // Convert Date to ISO string
-      isFavorite: false, // Set default value
+      description: photo.description || '',
+      date: photo.createdAt.toISOString(),
+      tags: photo.classification?.tags || [],
+      albumIds: photo.albumId ? [photo.albumId] : [],
+      isFavorite: false,
+      originalUrl: photo.originalUrl,
       thumbnailUrl: photo.url,
-      tags: photo.classification?.tags,
       classification: photo.classification
-    })) as Photo[];
+    }));
   }, [photos]);
 
   // Group photos by date
@@ -44,7 +45,7 @@ const OrganizedPhotoViewer: React.FC<OrganizedPhotoViewerProps> = ({ className }
     const groups: { [key: string]: Photo[] } = {};
     
     convertedPhotos.forEach(photo => {
-      const date = new Date(photo.dateAdded);
+      const date = new Date(photo.date);
       const dateKey = format(date, 'yyyy-MM-dd');
       
       if (!groups[dateKey]) {

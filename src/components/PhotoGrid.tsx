@@ -17,18 +17,19 @@ const PhotoGrid = () => {
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
 
   // Convert photos to the expected Photo type format for fullscreen viewer
-  const convertedPhotos = photos.map(photo => ({
+  const convertedPhotos: Photo[] = photos.map(photo => ({
     id: photo.id,
     url: photo.url,
-    originalUrl: photo.originalUrl,
     title: photo.title,
-    description: photo.description,
-    dateAdded: photo.createdAt.toISOString(),
+    description: photo.description || '',
+    date: photo.createdAt.toISOString(),
+    tags: photo.classification?.tags || [],
+    albumIds: photo.albumId ? [photo.albumId] : [],
     isFavorite: isFavorite(photo.id),
+    originalUrl: photo.originalUrl,
     thumbnailUrl: photo.url,
-    tags: photo.classification?.tags,
     classification: photo.classification
-  })) as Photo[];
+  }));
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;

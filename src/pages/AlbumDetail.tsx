@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -8,7 +7,7 @@ import { usePhotos } from '@/context/PhotoContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Trash, Image } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Photo as PhotoType } from '@/types/photo';
+import { Photo } from '@/types/photo';
 import FullscreenImageViewer from '@/components/FullscreenImageViewer';
 
 const AlbumDetail = () => {
@@ -36,21 +35,23 @@ const AlbumDetail = () => {
   }
 
   // Convert photos to the expected format
-  const convertedPhotos = photos.map(photo => ({
-    id: photo.id,
-    url: photo.url,
-    originalUrl: photo.originalUrl,
-    title: photo.title,
-    description: photo.description,
-    tags: photo.classification?.tags || [],
-    dateAdded: photo.createdAt?.toISOString() || new Date().toISOString(),
-    isFavorite: isFavorite(photo.id),
-    albumId: album.photoIds.includes(photo.id) ? album.id : undefined,
-    thumbnailUrl: photo.url,
-    classification: photo.classification
-  })) as PhotoType[];
+  const convertedPhotos: Photo[] = photos
+    .filter(p => album.photoIds.includes(p.id))
+    .map(photo => ({
+      id: photo.id,
+      url: photo.url,
+      title: photo.title,
+      description: photo.description || '',
+      date: photo.createdAt?.toISOString() || new Date().toISOString(),
+      tags: photo.classification?.tags || [],
+      albumIds: [album.id],
+      isFavorite: isFavorite(photo.id),
+      originalUrl: photo.originalUrl,
+      thumbnailUrl: photo.url,
+      classification: photo.classification
+    }));
 
-  const albumPhotos = getAlbumPhotos(album.id, convertedPhotos);
+  const albumPhotos = convertedPhotos;
 
   const handleDeleteAlbum = () => {
     if (window.confirm(`Are you sure you want to delete "${album.name}"? This cannot be undone.`)) {
@@ -135,7 +136,7 @@ const AlbumDetail = () => {
               <PhotoCard
                 key={photo.id}
                 id={photo.id}
-                url={photo.url || photo.thumbnailUrl || ''}
+                url={photo.url}
                 title={photo.title}
                 classification={photo.classification}
                 onFullscreen={() => handleOpenFullscreen(index)}
