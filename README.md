@@ -8,6 +8,7 @@ PhotoFlare is a modern photo management web application built with React, TypeSc
 ## Features
 
 - ✅ Photo gallery with grid and detail views
+- ✅ Organized view with date-based grouping
 - ✅ Offline-first architecture with local storage
 - ✅ Cloud sync when online
 - ✅ Customizable UI with theming options
@@ -55,7 +56,7 @@ PhotoFlare uses environment variables for configuration. Here's what each variab
 | VITE_STORAGE_MODE | Default storage mode (local/cloud) | cloud |
 | VITE_ENVIRONMENT | Environment (development/production) | development |
 
-## Running the App
+## Running the App Locally
 
 ### Development Mode
 
@@ -64,7 +65,7 @@ npm run dev
 # or
 yarn dev
 ```
-The app will be available at http://localhost:8080
+The app will be available at http://localhost:5173
 
 ### Building for Production
 
@@ -81,6 +82,143 @@ npm run preview
 # or
 yarn preview
 ```
+
+## Deployment Guide
+
+### Option 1: Deploy to Vercel (Recommended)
+
+1. Create a [Vercel account](https://vercel.com/signup) if you don't have one
+2. Install the Vercel CLI:
+   ```bash
+   npm install -g vercel
+   ```
+3. Log in to Vercel:
+   ```bash
+   vercel login
+   ```
+4. Deploy the application:
+   ```bash
+   vercel
+   ```
+5. For production deployment:
+   ```bash
+   vercel --prod
+   ```
+
+#### Environment Variables on Vercel
+
+1. Go to your project on the Vercel dashboard
+2. Navigate to Settings > Environment Variables
+3. Add all the variables from your `.env.local` file
+
+### Option 2: Deploy to Netlify
+
+1. Create a [Netlify account](https://app.netlify.com/signup) if you don't have one
+2. Install the Netlify CLI:
+   ```bash
+   npm install -g netlify-cli
+   ```
+3. Log in to Netlify:
+   ```bash
+   netlify login
+   ```
+4. Initialize Netlify in your project:
+   ```bash
+   netlify init
+   ```
+5. Create a `netlify.toml` file in your project root:
+   ```toml
+   [build]
+     command = "npm run build"
+     publish = "dist"
+     
+   [[redirects]]
+     from = "/*"
+     to = "/index.html"
+     status = 200
+   ```
+6. Deploy your site:
+   ```bash
+   netlify deploy --prod
+   ```
+
+#### Environment Variables on Netlify
+
+1. Go to your site settings on Netlify dashboard
+2. Navigate to Build & deploy > Environment
+3. Add all variables from your `.env.local` file
+
+### Option 3: Traditional Web Hosting
+
+1. Build the application:
+   ```bash
+   npm run build
+   ```
+2. The built files will be in the `dist` directory
+3. Upload the contents of the `dist` directory to your web server
+4. Configure your web server to serve the application:
+
+#### Apache Configuration (.htaccess)
+
+```apache
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+```
+
+#### Nginx Configuration
+
+```nginx
+server {
+  listen 80;
+  server_name yourdomain.com;
+  root /path/to/dist;
+  
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+}
+```
+
+### Environment Variables with Traditional Hosting
+
+With traditional hosting, you'll need to build the application with environment variables set:
+
+1. Create a `.env.production` file with your production values
+2. Build the application:
+   ```bash
+   npm run build
+   ```
+3. The environment variables will be baked into the build
+
+## Post-Deployment Verification
+
+After deploying, verify that:
+
+1. The application loads correctly
+2. Images can be uploaded and viewed
+3. Albums can be created and managed
+4. The organization view works as expected
+5. Offline mode functions properly
+
+## Common Deployment Issues
+
+### 404 Errors on Page Refresh
+
+If you encounter 404 errors when refreshing the page or accessing a route directly, it means your server isn't configured to serve the `index.html` file for all routes. Review the server configuration examples above.
+
+### CORS Issues
+
+If you're using a separate API backend, you might encounter CORS issues. Make sure your API server allows requests from your frontend domain.
+
+### Environment Variable Problems
+
+If features aren't working as expected, check that all environment variables are properly set in your deployment environment.
 
 ## Architecture
 
@@ -142,12 +280,6 @@ photoflare/
 3. Commit your changes: `git commit -m 'Add some amazing feature'`
 4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a pull request
-
-## Deployment
-
-You can deploy PhotoFlare to any static hosting service like Netlify, Vercel, or GitHub Pages.
-
-To deploy with environment variables, configure them in your hosting provider's dashboard.
 
 ## License
 

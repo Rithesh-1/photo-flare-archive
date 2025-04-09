@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Search, Menu, X, Image, Grid, Heart, Sparkles, Settings } from 'lucide-react';
+import { Search, Menu, X, Image, Grid, Heart, Sparkles, Settings, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -27,6 +27,7 @@ const Navbar = () => {
 
   const navItems = [
     { icon: <Image size={20} />, label: 'Photos', path: '/' },
+    { icon: <Calendar size={20} />, label: 'Organize', path: '/organize' },
     { icon: <Grid size={20} />, label: 'Albums', path: '/albums' },
     { icon: <Heart size={20} />, label: 'Favorites', path: '/favorites' },
     { icon: <Sparkles size={20} />, label: 'Classifier', path: '/classifier' },

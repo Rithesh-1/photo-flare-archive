@@ -16,6 +16,7 @@ import AlbumDetail from "./pages/AlbumDetail";
 import Favorites from "./pages/Favorites";
 import ImageClassifier from "./pages/ImageClassifier";
 import Admin from "./pages/Admin";
+import Organize from "./pages/Organize";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
                   <Route path="/favorites" element={<Favorites />} />
                   <Route path="/classifier" element={<ImageClassifier />} />
                   <Route path="/admin" element={<Admin />} />
+                  <Route path="/organize" element={<Organize />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
