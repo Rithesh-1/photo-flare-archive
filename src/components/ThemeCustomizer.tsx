@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useTheme, ThemeStyle } from '@/context/ThemeContext';
 import { useAppConfig } from '@/context/AppConfigContext';
@@ -13,7 +12,6 @@ import {
   Moon,
   Droplet,
   Square,
-  Transparency,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';

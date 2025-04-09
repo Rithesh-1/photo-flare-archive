@@ -29,7 +29,7 @@ const CreateAlbumDialog: React.FC<CreateAlbumDialogProps> = ({
   onOpenChange,
   initialPhotoId,
 }) => {
-  const { addAlbum } = useAlbums();
+  const { createAlbum } = useAlbums();
   const { photos } = usePhotos();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -63,7 +63,7 @@ const CreateAlbumDialog: React.FC<CreateAlbumDialogProps> = ({
       await new Promise(resolve => setTimeout(resolve, 800));
       
       // Create the album
-      const newAlbum = addAlbum(name, description, selectedPhotoIds);
+      const newAlbum = createAlbum(name, description, selectedPhotoIds);
       
       // Show success state
       setIsSuccess(true);
