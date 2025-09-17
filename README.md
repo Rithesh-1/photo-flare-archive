@@ -147,14 +147,6 @@ If cloud sync is failing:
 2. Check your network connection
 3. Ensure the cloud service is operational
 
-## Getting Support
-
-For help with deployment or technical issues:
-
-- Open an issue on our GitHub repository
-- Contact support at support@photoflow-app.com
-- Check our documentation at docs.photoflow-app.com
-
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
